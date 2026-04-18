@@ -714,12 +714,37 @@
 
     function filterByCompany() {
         var filterCompany = document.getElementById('filterCompany').value;
+        var filterProject = document.getElementById('filterProject');
+        var selectedProjectId = filterProject.value;
+
         if (filterCompany !== 'all') {
-            document.getElementById('filterProject').value = 'all';
-            document.getElementById('filterProject').disabled = true;
+            // 获取与该公司相关的项目
+            var relatedProjects = projects.filter(p => p.companyName === filterCompany);
+            if (relatedProjects.length > 0) {
+                // 更新筛选项目的选项，只显示相关项目
+                filterProject.innerHTML = '<option value="all">全部项目</option>';
+                relatedProjects.forEach(function(p) {
+                    var option = document.createElement('option');
+                    option.value = p.id;
+                    option.textContent = p.projectName;
+                    filterProject.appendChild(option);
+                });
+
+                // 如果当前选中的项目不属于该公司，重置为"全部项目"
+                var currentProjectInList = relatedProjects.find(p => p.id === selectedProjectId);
+                if (!currentProjectInList) {
+                    filterProject.value = 'all';
+                }
+            } else {
+                // 没有相关项目
+                filterProject.innerHTML = '<option value="all">全部项目</option>';
+                filterProject.value = 'all';
+            }
         } else {
-            document.getElementById('filterProject').disabled = false;
+            // 选择"全部公司"，显示全部项目
+            updateProjectFilter();
         }
+
         applyFilters();
     }
 
