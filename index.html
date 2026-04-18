@@ -131,9 +131,15 @@
                     <span class="infringement-title" id="currentProjectTitle">侵权线索列表</span>
                     <span class="selected-count" id="selectedCount">已选 0 项</span>
                 </div>
-                <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                <div style="display:flex; gap:10px; flex-wrap:wrap; align-items:center;">
+                    <select id="platformSelect" style="padding:8px; border-radius:6px; border:1px solid #ddd;">
+                        <option value="taobao">淘宝</option>
+                        <option value="pinduoduo">拼多多</option>
+                        <option value="jd">京东</option>
+                        <option value="1688">1688</option>
+                    </select>
                     <button class="btn-create" onclick="openAddInfringementModal()">+ 手动添加线索</button>
-                    <button class="btn-create" onclick="oneClickScrape()" style="background-color:#28a745;">🚀 打开淘宝搜索</button>
+                    <button class="btn-create" onclick="oneClickScrape()" style="background-color:#28a745;">🚀 打开搜索</button>
                     <button class="btn-create" onclick="importScrapedDataManual()" style="background-color:#ffc107;color:#333;">📥 导入抓取数据</button>
                     <button class="btn-export-selected" onclick="exportSelectedInfringements()" id="exportSelectedBtn">📥 导出选中的侵权线索</button>
                 </div>
@@ -302,7 +308,25 @@
         var keyword = project.keywords.split(';').map(function(k) { return k.trim(); }).filter(function(k) { return k; })[0] || project.keywords.trim();
         var minP = Math.round(project.minPrice * 100);
         var maxP = Math.round(project.maxPrice * 100);
-        var url = 'https://s.taobao.com/search?q=' + encodeURIComponent(keyword) + '&sort=sale-desc&lowPrice=' + minP + '&highPrice=' + maxP;
+        var platform = document.getElementById('platformSelect').value;
+
+        var url = '';
+        switch(platform) {
+            case 'taobao':
+                url = 'https://s.taobao.com/search?q=' + encodeURIComponent(keyword) + '&sort=sale-desc&lowPrice=' + minP + '&highPrice=' + maxP;
+                break;
+            case 'pinduoduo':
+                url = 'https://mobile.yangkeduo.com/search_result.html?search_key=' + encodeURIComponent(keyword);
+                break;
+            case 'jd':
+                url = 'https://search.jd.com/Search?keyword=' + encodeURIComponent(keyword);
+                break;
+            case '1688':
+                url = 'https://s.1688.com/selloffer/offer_search.htm?keywords=' + encodeURIComponent(keyword);
+                break;
+            default:
+                url = 'https://s.taobao.com/search?q=' + encodeURIComponent(keyword);
+        }
         window.open(url, '_blank');
     }
 
