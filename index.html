@@ -1631,6 +1631,9 @@
         var input = document.createElement('input');
         input.type = 'file';
         input.accept = '.json';
+        input.style.display = 'none';
+        document.body.appendChild(input);
+
         input.onchange = function(e) {
             var file = e.target.files[0];
             if (!file) return;
@@ -1657,8 +1660,12 @@
                 }
             };
             reader.readAsText(file);
+            document.body.removeChild(input);
         };
-        input.click();
+
+        setTimeout(function() {
+            input.click();
+        }, 100);
     }
 </script>
 </body>
