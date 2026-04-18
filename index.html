@@ -1421,10 +1421,10 @@
 
             // 计算统计信息
             var infringementCount = infringementData[p.id] ? infringementData[p.id].length : 0;
-            var totalSales = infringementData[p.id].reduce(function(sum, item) {
+            var totalSales = (infringementData[p.id] || []).reduce(function(sum, item) {
                 return sum + (parseFloat(item.salePrice) || 0);
             }, 0);
-            var totalReviews = infringementData[p.id].reduce(function(sum, item) {
+            var totalReviews = (infringementData[p.id] || []).reduce(function(sum, item) {
                 return sum + (item.reviews || 0);
             }, 0);
 
