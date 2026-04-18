@@ -150,7 +150,7 @@
 
             <!-- 书签安装提示 -->
             <div class="bookmarklet-banner">
-                <p>👇 <strong>拖动到书签栏</strong>，在淘宝搜索结果页点一下即可自动抓取，数据直接出现在这里：</p>
+                <p>👇 <strong>拖动到书签栏</strong>，在商品搜索结果页点一下即可自动抓取，数据直接出现在这里：</p>
                 <a class="bookmarklet-link"
                    href="javascript:(function(){var s=document.createElement('script');s.src='https://cdn.jsdelivr.net/gh/houxiaoyusissi1-debug/infringement-monitor@main/scraper.js';document.body.appendChild(s);})();"
                    onclick="event.preventDefault(); alert('请拖动到书签栏，不要点击！');">
@@ -1221,7 +1221,7 @@
     function importScrapedDataManual() {
         if (!currentProjectId) { alert('❌ 请先选择一个项目！'); return; }
         var scrapedData = localStorage.getItem('scrapedData');
-        if (!scrapedData) { alert('❌ 没有找到抓取的数据！\n\n请先点击「🚀 打开淘宝搜索」，然后在淘宝页面点击书签栏的「🛒 抓取侵权商品」书签。'); return; }
+        if (!scrapedData) { alert('❌ 没有找到抓取的数据！\n\n请先点击「🚀 打开搜索」，然后在搜索页面点击书签栏的「🛒 抓取侵权商品」书签。'); return; }
         try {
             var products = JSON.parse(scrapedData);
             if (products.length === 0) { alert('❌ 抓取数据为空！'); return; }
