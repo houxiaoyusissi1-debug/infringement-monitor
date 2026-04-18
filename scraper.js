@@ -63,12 +63,19 @@
             var salesEl = card.querySelector('[class*="sale"], [class*="deal"]');
             var shopEl = card.querySelector('[class*="shop"], [class*="Shop"]');
             var reviewEl = card.querySelector('[class*="review"], [class*="Review"], [class*="comment"], [class*="rate"]');
+            var imageEl = card.querySelector('img') || link.querySelector('img');
 
             var title = (titleEl.textContent || titleEl.getAttribute('title') || '').trim().substring(0, 100);
             var price = priceEl ? cleanPrice(priceEl.textContent) : '';
             var sales = salesEl ? cleanNum(salesEl.textContent) : '0';
             var reviews = reviewEl ? cleanReviewCount(reviewEl.textContent) : '0';
             var shop = shopEl ? shopEl.textContent.trim() : '淘宝店铺';
+            var image = imageEl ? (imageEl.src || imageEl.getAttribute('data-src')) : '';
+
+            // 处理相对路径图片URL
+            if (image && image.indexOf('//') === 0) {
+                image = 'https:' + image;
+            }
 
             if (!title || !href) return null;
 
@@ -80,6 +87,7 @@
                 sales: sales,
                 reviews: reviews,
                 link: href,
+                image: image,
                 platform: '淘宝'
             };
         } catch (e) {
