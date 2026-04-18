@@ -126,6 +126,7 @@
             <button class="btn-create" onclick="exportProjectsExcel()">📥 导出项目列表</button>
             <button class="btn-create" style="background-color:#17a2b8;" onclick="exportBackupData()">💾 导出备份数据</button>
             <button class="btn-create" style="background-color:#6610f2;" onclick="importBackupData()">📂 导入备份数据</button>
+            <button class="btn-create" style="background-color:#ffc107;color:#333;" onclick="importExcelFile()">📥 导入Excel文件</button>
             <div class="search-box">
                 <input type="text" id="searchInput" placeholder="请输入项目名称">
                 <button class="btn-search" onclick="searchProjects()">搜索</button>
@@ -152,14 +153,16 @@
             <div class="header">
                 <h1>数据看板</h1>
             </div>
-            <div style="display:flex; gap:30px; justify-content:center; padding:60px 20px;">
-                <div style="flex:1; max-width:400px; background:#e8f5e9; padding:40px; border-radius:12px; text-align:center;">
-                    <div style="font-size:64px; font-weight:bold; color:#2e7d32; margin-bottom:10px;" id="dashboardProjectCount">0</div>
-                    <div style="font-size:18px; color:#4caf50;">项目数量</div>
-                </div>
-                <div style="flex:1; max-width:400px; background:#e8f5e9; padding:40px; border-radius:12px; text-align:center;">
-                    <div style="font-size:64px; font-weight:bold; color:#2e7d32; margin-bottom:10px;" id="dashboardInfringementCount">0</div>
-                    <div style="font-size:18px; color:#4caf50;">侵权数量</div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:20px; padding:60px 20px;">
+                <div style="display:flex; align-items:center; gap:30px; max-width:800px; background:#e8f5e9; padding:50px; border-radius:12px;">
+                    <div style="text-align:center;">
+                        <div style="font-size:64px; font-weight:bold; color:#2e7d32; margin-bottom:10px;" id="dashboardProjectCount">0</div>
+                        <div style="font-size:18px; color:#4caf50;">项目数量</div>
+                    </div>
+                    <div style="text-align:center;">
+                        <div style="font-size:64px; font-weight:bold; color:#2e7d32; margin-bottom:10px;" id="dashboardInfringementCount">0</div>
+                        <div style="font-size:18px; color:#4caf50;">侵权数量</div>
+                    </div>
                 </div>
             </div>
             <div style="margin-top:40px; text-align:center;">
@@ -1704,6 +1707,100 @@
                 }
             };
             reader.readAsText(file);
+            document.body.removeChild(input);
+        };
+
+        input.click();
+    }
+
+    function importExcelFile() {
+        var input = document.createElement('input');
+        input.type = 'file';
+        input.accept = '.xlsx,.xls';
+        input.style.display = 'none';
+        input.style.position = 'absolute';
+        input.style.left = '-9999px';
+        document.body.appendChild(input);
+
+        input.onchange = function(e) {
+            var file = e.target.files[0];
+            if (!file) return;
+
+            var reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    var workbook = XLSX.read(e.target.result, { type: 'binary' });
+                    var sheetName = workbook.SheetNames[0];
+                    var worksheet = workbook.Sheets[sheetName];
+                    var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+
+                    if (!jsonData || jsonData.length === 0) {
+                        alert('❌ Excel文件为空或格式不正确！');
+                        return;
+                    }
+
+                    if (confirm('确定要导入此Excel文件吗？\n\n⚠️ 导入将覆盖当前所有数据！\n\n文件名：' + file.name)) {
+                        var importedProjects = 0;
+                        var importedInfringements = 0;
+
+                        jsonData.forEach(function(row) {
+                            if (row.项目名称 && row.公司名称) {
+                                var project = {
+                                    id: Date.now(),
+                                    projectName: row.项目名称 || '',
+                                    companyName: row.公司名称 || '',
+                                    country: row.国家 || '中国',
+                                    platforms: row.平台 ? row.平台.toString().split(',') : ['淘宝'],
+                                    keywords: row.关键词 || '',
+                                    minPrice: parseFloat(row.最小价格) || 0,
+                                    maxPrice: parseFloat(row.最大价格) || 0,
+                                    infringementType: row.侵权类型 || '其他',
+                                    notes: row.项目备注 || '',
+                                    createdAt: new Date().toLocaleString('zh-CN')
+                                };
+                                projects.push(project);
+                                importedProjects++;
+
+                                if (infringementData[project.id]) {
+                                    infringementData[project.id] = [];
+                                }
+                            }
+
+                            if (row.商品名称 || row.侵权地址) {
+                                var infringement = {
+                                    id: Date.now(),
+                                    productName: row.商品名称 || '',
+                                    shopName: row.店铺名称 || '',
+                                    salePrice: parseFloat(row.售价) || 0,
+                                    sales: parseInt(row.销量) || 0,
+                                    reviews: parseInt(row.评价数量) || 0,
+                                    link: row.链接 || '',
+                                    infringementType: row.侵权类型 || '其他',
+                                    remarks: row.抓取时间 || new Date().toLocaleString('zh-CN'),
+                                    addedAt: new Date().toLocaleString('zh-CN')
+                                };
+                                var projectId = projects.length > 0 ? projects[projects.length - 1].id : null;
+                                if (projectId) {
+                                    if (!infringementData[projectId]) {
+                                        infringementData[projectId] = [];
+                                    }
+                                    infringementData[projectId].push(infringement);
+                                    importedInfringements++;
+                                }
+                            }
+                        });
+
+                        localStorage.setItem('projects', JSON.stringify(projects));
+                        localStorage.setItem('infringementData', JSON.stringify(infringementData));
+                        renderProjectList();
+
+                        alert('✅ Excel文件导入成功！\n\n导入项目数：' + importedProjects + '\n导入侵权线索数：' + importedInfringements);
+                    }
+                } catch(err) {
+                    alert('❌ Excel文件读取失败：' + err.message);
+                }
+            };
+            reader.readAsBinaryString(file);
             document.body.removeChild(input);
         };
 
