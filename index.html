@@ -731,6 +731,9 @@
         // 获取列筛选条件
         var columnFilterType = document.getElementById('columnFilterType').value;
         var columnFilterMin = parseFloat(document.getElementById('columnFilterMin').value) || 0;
+        var columnFilterFrom = parseFloat(document.getElementById('columnFilterFrom')?.value) || 0;
+        var columnFilterTo = parseFloat(document.getElementById('columnFilterTo')?.value) || 0;
+        var columnFilterText = document.getElementById('columnFilterText')?.value || '';
 
         // 获取所有选中的平台
         var checkboxes = document.querySelectorAll('#platformSelector input[type="checkbox"]');
@@ -775,6 +778,11 @@
 
                 if (columnFilterType === 'ge') {
                     allData = allData.filter(item => item.strikeValue / 10000 >= columnFilterMin);
+                } else if (columnFilterType === 'range') {
+                    allData = allData.filter(item => {
+                        var value = item.strikeValue / 10000;
+                        return value >= columnFilterFrom && value <= columnFilterTo;
+                    });
                 } else if (columnFilterType === 'desc') {
                     allData = allData.sort((a, b) => b.strikeValue - a.strikeValue);
                 } else if (columnFilterType === 'asc') {
@@ -783,6 +791,11 @@
             } else if (columnName === '售价') {
                 if (columnFilterType === 'ge') {
                     allData = allData.filter(item => (item.salePrice || 0) >= columnFilterMin);
+                } else if (columnFilterType === 'range') {
+                    allData = allData.filter(item => {
+                        var value = item.salePrice || 0;
+                        return value >= columnFilterFrom && value <= columnFilterTo;
+                    });
                 } else if (columnFilterType === 'desc') {
                     allData = allData.sort((a, b) => (b.salePrice || 0) - (a.salePrice || 0));
                 } else if (columnFilterType === 'asc') {
@@ -792,6 +805,10 @@
                 var salesData = allData.map(item => ({...item, salesNum: parseSales(item.sales)}));
                 if (columnFilterType === 'ge') {
                     allData = salesData.filter(item => item.salesNum >= columnFilterMin);
+                } else if (columnFilterType === 'range') {
+                    allData = salesData.filter(item => {
+                        return item.salesNum >= columnFilterFrom && item.salesNum <= columnFilterTo;
+                    });
                 } else if (columnFilterType === 'desc') {
                     allData = salesData.sort((a, b) => b.salesNum - a.salesNum);
                 } else if (columnFilterType === 'asc') {
@@ -800,10 +817,59 @@
             } else if (columnName === '评价数量') {
                 if (columnFilterType === 'ge') {
                     allData = allData.filter(item => (item.reviews || 0) >= columnFilterMin);
+                } else if (columnFilterType === 'range') {
+                    allData = allData.filter(item => {
+                        var value = item.reviews || 0;
+                        return value >= columnFilterFrom && value <= columnFilterTo;
+                    });
                 } else if (columnFilterType === 'desc') {
                     allData = allData.sort((a, b) => (b.reviews || 0) - (a.reviews || 0));
                 } else if (columnFilterType === 'asc') {
                     allData = allData.sort((a, b) => (a.reviews || 0) - (b.reviews || 0));
+                }
+            } else if (columnName === '店铺名称') {
+                if (columnFilterType === 'desc') {
+                    allData = allData.sort((a, b) => (b.shopName || '').localeCompare(a.shopName || '', 'zh-CN'));
+                } else if (columnFilterType === 'asc') {
+                    allData = allData.sort((a, b) => (a.shopName || '').localeCompare(b.shopName || '', 'zh-CN'));
+                } else if (columnFilterText) {
+                    allData = allData.filter(item => {
+                        return item.shopName && item.shopName.toLowerCase().includes(columnFilterText.toLowerCase());
+                    });
+                }
+            } else if (columnName === '抓取时间') {
+                if (columnFilterType === 'desc') {
+                    allData = allData.sort((a, b) => {
+                        var dateA = a.addedAt ? new Date(a.addedAt) : new Date(0);
+                        var dateB = b.addedAt ? new Date(b.addedAt) : new Date(0);
+                        return dateB - dateA;
+                    });
+                } else if (columnFilterType === 'asc') {
+                    allData = allData.sort((a, b) => {
+                        var dateA = a.addedAt ? new Date(a.addedAt) : new Date(0);
+                        var dateB = b.addedAt ? new Date(b.addedAt) : new Date(0);
+                        return dateA - dateB;
+                    });
+                } else if (columnFilterText) {
+                    allData = allData.filter(item => {
+                        if (!item.addedAt) return false;
+                        return item.addedAt.includes(columnFilterText);
+                    });
+                } else if (columnFilterFrom || columnFilterTo) {
+                    allData = allData.filter(item => {
+                        if (!item.addedAt) return false;
+                        var itemDate = new Date(item.addedAt);
+                        if (columnFilterFrom) {
+                            var fromDate = new Date(columnFilterFrom);
+                            if (itemDate < fromDate) return false;
+                        }
+                        if (columnFilterTo) {
+                            var toDate = new Date(columnFilterTo);
+                            toDate.setHours(23, 59, 59, 999);
+                            if (itemDate > toDate) return false;
+                        }
+                        return true;
+                    });
                 }
             }
         } else {
