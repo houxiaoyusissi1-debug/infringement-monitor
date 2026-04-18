@@ -1,0 +1,1701 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>侵权线索监控工具</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background-color: #f5f5f5;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* 左侧导航栏 */
+        .sidebar {
+            width: 200px;
+            background-color: #006633;
+            color: white;
+            padding: 20px 0;
+        }
+
+        .sidebar h2 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 18px;
+        }
+
+        .nav-item {
+            padding: 15px 20px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        .nav-item:hover {
+            background-color: #00552b;
+        }
+
+        .nav-item.active {
+            background-color: #004d26;
+            font-weight: bold;
+        }
+
+        /* 主内容区 */
+        .main-content {
+            flex: 1;
+            padding: 30px;
+        }
+
+        .header {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            color: #333;
+            margin-bottom: 15px;
+        }
+
+        .btn-create {
+            background-color: #006633;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin-right: 10px;
+        }
+
+        .btn-create:hover {
+            background-color: #00552b;
+        }
+
+        .search-box {
+            display: inline-block;
+            margin-left: 20px;
+        }
+
+        .search-box input {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 200px;
+        }
+
+        .btn-search {
+            background-color: #006633;
+            color: white;
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        .btn-reset {
+            background-color: white;
+            color: #666;
+            padding: 8px 16px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+
+        /* 项目列表表格 */
+        .table-container {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .data-table th {
+            background-color: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .data-table td {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .data-table tbody tr {
+            cursor: pointer;
+        }
+
+        .data-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .data-table tbody tr.active {
+            background-color: #e6f7e6;
+        }
+
+        .project-name {
+            color: #006633;
+            font-weight: 500;
+        }
+
+        .action-link {
+            color: #007bff;
+            text-decoration: none;
+            margin-right: 15px;
+            cursor: pointer;
+        }
+
+        .action-link:hover {
+            text-decoration: underline;
+        }
+
+        .action-link.delete {
+            color: #dc3545;
+        }
+
+        /* 侵权线索区域 */
+        .infringement-section {
+            background-color: white;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            overflow-x: auto;
+        }
+
+        .infringement-section .table-container {
+            overflow-x: auto;
+        }
+
+        /* 侵权线索表格 */
+        .infringement-table {
+            width: 100%;
+            min-width: 1400px;
+            border-collapse: collapse;
+        }
+
+        .infringement-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #f0f0f0;
+        }
+
+        .infringement-title {
+            font-size: 18px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .btn-export-selected {
+            background-color: #28a745;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-export-selected:hover {
+            background-color: #218838;
+        }
+
+        .btn-export-selected:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+
+        /* 侵权线索表格 */
+        .infringement-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .infringement-table th {
+            background-color: #f8f9fa;
+            padding: 12px;
+            text-align: left;
+            font-weight: 600;
+            color: #333;
+            border-bottom: 2px solid #e0e0e0;
+        }
+
+        .infringement-table td {
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+        }
+
+        .infringement-table tr:hover {
+            background-color: #f8f9fa;
+        }
+
+        .checkbox-cell {
+            width: 40px;
+            text-align: center;
+        }
+
+        .checkbox-cell input {
+            width: 16px;
+            height: 16px;
+            cursor: pointer;
+        }
+
+        .product-link {
+            color: #007bff;
+            text-decoration: none;
+        }
+
+        .product-link:hover {
+            text-decoration: underline;
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: #999;
+        }
+
+        .no-project {
+            text-align: center;
+            padding: 60px;
+            color: #999;
+        }
+
+        .no-project h2 {
+            font-size: 20px;
+            margin-bottom: 10px;
+        }
+
+        /* 模态框 */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background-color: white;
+            padding: 30px;
+            border-radius: 8px;
+            width: 90%;
+            max-width: 600px;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-size: 20px;
+            font-weight: bold;
+            margin-bottom: 20px;
+            color: #333;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #333;
+        }
+
+        .form-group label .required {
+            color: red;
+        }
+
+        .form-group input[type="text"],
+        .form-group input[type="number"],
+        .form-group textarea,
+        .form-group select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+
+        .form-group .hint {
+            font-size: 12px;
+            color: #999;
+            margin-top: 5px;
+        }
+
+        .checkbox-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+        }
+
+        .checkbox-item {
+            display: flex;
+            align-items: center;
+        }
+
+        .checkbox-item input {
+            margin-right: 8px;
+        }
+
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .btn-submit {
+            background-color: #006633;
+            color: white;
+            padding: 10px 30px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .btn-cancel {
+            background-color: white;
+            color: #666;
+            padding: 10px 30px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .price-range {
+            display: flex;
+            gap: 20px;
+        }
+
+        .price-range > div {
+            flex: 1;
+        }
+
+        /* 选中数量提示 */
+        .selected-count {
+            background-color: #006633;
+            color: white;
+            padding: 5px 12px;
+            border-radius: 4px;
+            font-size: 13px;
+            margin-left: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- 左侧导航栏 -->
+        <div class="sidebar">
+            <h2>控制台</h2>
+            <div class="nav-item active" id="navProject" onclick="showProjectManagement()">项目管理</div>
+            <div class="nav-item" id="navTask" onclick="showTaskManagement()">任务管理</div>
+            <div class="nav-item" id="navDashboard" onclick="showDataDashboard()">数据看板</div>
+            <div class="nav-item" id="navHelp">使用说明</div>
+        </div>
+
+        <!-- 主内容区 -->
+        <div class="main-content">
+            <!-- 项目管理页面 -->
+            <div id="projectManagementPage">
+                <div class="header">
+                    <h1>项目管理</h1>
+                    <button class="btn-create" onclick="openCreateModal()">+ 创建项目</button>
+                    <button class="btn-create" onclick="exportProjectsExcel()">📥 导出项目列表</button>
+
+                    <div class="search-box">
+                        <input type="text" id="searchInput" placeholder="请输入项目名称">
+                        <button class="btn-search" onclick="searchProjects()">搜索</button>
+                        <button class="btn-reset" onclick="resetSearch()">重置</button>
+                    </div>
+                </div>
+
+                <!-- 项目列表表格 -->
+                <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>编号</th>
+                            <th>公司名称</th>
+                            <th>项目名称</th>
+                            <th>地域</th>
+                            <th>国家</th>
+                            <th>平台</th>
+                            <th>关键词</th>
+                            <th>价格区间</th>
+                            <th>侵权类型</th>
+                            <th>创建日期</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="projectList">
+                        <!-- 动态生成 -->
+                    </tbody>
+                </table>
+                <div id="noProjectState" class="empty-state" style="display: none;">
+                    暂无项目，点击"创建项目"开始
+                </div>
+            </div>
+
+            <!-- 任务管理页面 -->
+            <div id="taskManagementPage" style="display: none;">
+                <!-- 侵权线索区域 -->
+                <div id="infringementSection" class="infringement-section">
+                <div class="infringement-header">
+                    <div>
+                        <span class="infringement-title" id="currentProjectTitle">侵权线索列表</span>
+                        <span class="selected-count" id="selectedCount">已选 0 项</span>
+                    </div>
+                    <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+                        <button class="btn-create" onclick="openAddInfringementModal()">+ 手动添加线索</button>
+                        <button class="btn-create" onclick="oneClickScrape()" style="background-color: #28a745;">🚀 一键抓取</button>
+                        <button class="btn-create" onclick="importScrapedDataManual()" style="background-color: #ffc107; color: #333;">📥 导入抓取数据</button>
+                        <button class="btn-create" onclick="checkDataStatus()" style="background-color: #6c757d;">🔍 检查数据</button>
+                        <button class="btn-export-selected" onclick="exportSelectedInfringements()" id="exportSelectedBtn">
+                            📥 导出选中的侵权线索
+                        </button>
+                    </div>
+                </div>
+
+                <table class="infringement-table">
+                    <thead>
+                        <tr>
+                            <th class="checkbox-cell">
+                                <input type="checkbox" id="selectAll" onclick="toggleSelectAll()">
+                            </th>
+                            <th>序号</th>
+                            <th>图片</th>
+                            <th>平台</th>
+                            <th>商品名称</th>
+                            <th>店铺名称</th>
+                            <th>地址</th>
+                            <th>标价</th>
+                            <th>售价</th>
+                            <th>销量</th>
+                            <th>评价数量</th>
+                            <th>链接</th>
+                            <th>侵权类型</th>
+                            <th>备注</th>
+                        </tr>
+                    </thead>
+                    <!-- 筛选器 -->
+                    <tr style="background-color: #f8f9fa;">
+                        <td colspan="14" style="padding: 15px;">
+                            <div style="display: flex; gap: 20px; align-items: center; flex-wrap: wrap;">
+                                <div>
+                                    <label style="font-weight: bold; margin-right: 8px;">销量排序：</label>
+                                    <select id="salesSort" onchange="renderInfringements()" style="padding: 6px 12px; border: 1px solid #ddd; border-radius: 4px;">
+                                        <option value="desc">从高到低</option>
+                                        <option value="asc">从低到高</option>
+                                        <option value="none">不排序</option>
+                                    </select>
+                                </div>
+                                <div>
+                                    <label style="font-weight: bold; margin-right: 8px;">侵权类型：</label>
+                                    <label><input type="checkbox" value="商标侵权" checked onchange="renderInfringements()"> 商标侵权</label>
+                                    <label style="margin-left: 10px;"><input type="checkbox" value="专利侵权" checked onchange="renderInfringements()"> 专利侵权</label>
+                                </div>
+                                <div>
+                                    <label style="font-weight: bold; margin-right: 8px;">评价数量 ≥</label>
+                                    <input type="number" id="minReviews" value="0" min="0" onchange="renderInfringements()" style="width: 80px; padding: 6px; border: 1px solid #ddd; border-radius: 4px;">
+                                </div>
+                            </div>
+                        </td>
+                    </tr>
+                    <tbody id="infringementList">
+                        <!-- 动态生成 -->
+                    </tbody>
+                </table>
+            </div>
+            </div>
+
+            <!-- 数据看板页面 -->
+            <div id="dataDashboardPage" style="display: none;">
+                <div class="header">
+                    <h1>数据看板</h1>
+                    <p style="color: #666; margin-top: 10px;">具体功能配置中...</p>
+                </div>
+            </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 创建项目模态框 -->
+    <div class="modal" id="createModal">
+        <div class="modal-content">
+            <div class="modal-header">创建项目</div>
+            <form id="projectForm">
+                <div class="form-group" style="display: flex; gap: 20px;">
+                    <div style="flex: 1;">
+                        <label>项目名称 <span class="required">*</span></label>
+                        <input type="text" id="projectName" required placeholder="请输入项目名称">
+                    </div>
+                    <div style="flex: 1;">
+                        <label>公司名称 <span class="required">*</span></label>
+                        <input type="text" id="companyName" required placeholder="请输入公司名称">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>选择地域 <span class="required">*</span></label>
+                    <select id="region" required onchange="updatePlatforms()">
+                        <option value="">请选择</option>
+                        <option value="domestic">国内</option>
+                        <option value="foreign">国外</option>
+                    </select>
+                </div>
+
+                <div class="form-group" id="countryGroup" style="display: none;">
+                    <label>选择国家 <span class="required">*</span></label>
+                    <select id="country" onchange="updatePriceLabels()">
+                        <option value="">请选择</option>
+                        <option value="美国">美国</option>
+                        <option value="欧盟">欧盟</option>
+                        <option value="英国">英国</option>
+                        <option value="韩国">韩国</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>选择平台 <span class="required">*</span></label>
+                    <div class="checkbox-group" id="platformGroup">
+                        <!-- 动态生成 -->
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>关键词 <span class="required">*</span></label>
+                    <textarea id="keywords" required placeholder="例如：山地车头盔; 自行车头盔; 骑行头盔"></textarea>
+                    <div class="hint" style="color: #666; line-height: 1.6;">
+                        <strong>如何编写关键词：</strong><br>
+                        1. 多个关键词用英文分号（;）分隔<br>
+                        2. 每个关键词一行或连续输入均可<br>
+                        3. 示例：关键词1; 关键词2; 关键词3<br>
+                        4. 根据商品特征选择核心检索词
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <div class="price-range">
+                        <div>
+                            <label id="minPriceLabel">最小价格（元）<span class="required">*</span></label>
+                            <input type="number" id="minPrice" required placeholder="请输入最小价格">
+                        </div>
+                        <div>
+                            <label id="maxPriceLabel">最大价格（元）<span class="required">*</span></label>
+                            <input type="number" id="maxPrice" required placeholder="请输入最大价格">
+                        </div>
+                    </div>
+                    <div class="hint">设置监控的价格区间</div>
+                </div>
+
+                <div class="form-group">
+                    <label>侵权类型 <span class="required">*</span></label>
+                    <select id="infringementType" required>
+                        <option value="">请选择</option>
+                        <option value="商标侵权">商标侵权</option>
+                        <option value="专利侵权">专利侵权</option>
+                        <option value="版权侵权">版权侵权</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>项目备注（可选）</label>
+                    <textarea id="notes" placeholder="请输入项目备注"></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-submit">创建</button>
+                    <button type="button" class="btn-cancel" onclick="closeCreateModal()">取消</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 添加线索模态框 -->
+    <div class="modal" id="addInfringementModal">
+        <div class="modal-content">
+            <div class="modal-header">添加侵权线索</div>
+            <form id="infringementForm">
+                <div class="form-group">
+                    <label>平台 <span class="required">*</span></label>
+                    <select id="infPlatform" required>
+                        <option value="">请选择</option>
+                        <option value="淘宝">淘宝</option>
+                        <option value="京东">京东</option>
+                        <option value="闲鱼">闲鱼</option>
+                        <option value="微信">微信</option>
+                        <option value="亚马逊">亚马逊</option>
+                        <option value="Temu">Temu</option>
+                        <option value="其他">其他</option>
+                    </select>
+                </div>
+
+                <div class="form-group">
+                    <label>商品名称 <span class="required">*</span></label>
+                    <input type="text" id="infProductName" required placeholder="请输入商品名称">
+                </div>
+
+                <div class="form-group">
+                    <label>商品图片URL（可选）</label>
+                    <input type="url" id="infImage" placeholder="请输入图片链接">
+                </div>
+
+                <div class="form-group">
+                    <label>店铺名称 <span class="required">*</span></label>
+                    <input type="text" id="infShopName" required placeholder="请输入店铺名称">
+                </div>
+
+                <div class="form-group">
+                    <label>店铺地址（可选）</label>
+                    <input type="text" id="infShopAddress" placeholder="请输入店铺地址">
+                </div>
+
+                <div class="form-group" style="display: flex; gap: 20px;">
+                    <div style="flex: 1;">
+                        <label>标价（原价）<span class="required">*</span></label>
+                        <input type="number" id="infOriginalPrice" required placeholder="请输入标价">
+                    </div>
+                    <div style="flex: 1;">
+                        <label>售价（折扣价）<span class="required">*</span></label>
+                        <input type="number" id="infSalePrice" required placeholder="请输入售价">
+                    </div>
+                </div>
+
+                <div class="form-group" style="display: flex; gap: 20px;">
+                    <div style="flex: 1;">
+                        <label>销量 <span class="required">*</span></label>
+                        <input type="text" id="infSales" required placeholder="例如：1000+">
+                    </div>
+                    <div style="flex: 1;">
+                        <label>评价数量 <span class="required">*</span></label>
+                        <input type="number" id="infReviews" required placeholder="请输入评价数量">
+                    </div>
+                </div>
+
+                <div class="form-group">
+                    <label>商品链接 <span class="required">*</span></label>
+                    <input type="url" id="infLink" required placeholder="请输入商品完整链接">
+                </div>
+
+                <div class="form-group">
+                    <label>备注（可选）</label>
+                    <textarea id="infRemarks" placeholder="例如：正品价5折、外观相似等"></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="submit" class="btn-submit">添加</button>
+                    <button type="button" class="btn-cancel" onclick="closeAddInfringementModal()">取消</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- 粘贴网页数据模态框 -->
+    <div class="modal" id="pasteDataModal">
+        <div class="modal-content" style="max-width: 700px;">
+            <div class="modal-header">粘贴电商网页数据</div>
+            <div style="line-height: 1.8;">
+                <p style="margin-bottom: 15px;"><strong>使用步骤：</strong></p>
+                <ol style="margin-left: 20px; margin-bottom: 20px; line-height: 1.8;">
+                    <li>在淘宝/京东等平台打开搜索结果页</li>
+                    <li>按 <code>Ctrl+A</code> 全选页面内容</li>
+                    <li>按 <code>Ctrl+C</code> 复制</li>
+                    <li>在下方输入框按 <code>Ctrl+V</code> 粘贴</li>
+                    <li>点击"解析数据"自动提取商品信息</li>
+                </ol>
+
+                <div style="background-color: #fff3cd; padding: 12px; border-radius: 4px; margin-bottom: 15px;">
+                    <p style="font-size: 13px; margin: 0;">💡 提示：可以复制多个商品的信息，系统会自动识别并分开</p>
+                </div>
+
+                <div class="form-group">
+                    <label>粘贴网页内容：</label>
+                    <textarea id="pasteContent" style="min-height: 200px; font-size: 12px;" placeholder="在此粘贴从电商网页复制的内容..."></textarea>
+                </div>
+
+                <div class="form-actions">
+                    <button type="button" class="btn-submit" onclick="parsePastedData()">📊 解析数据</button>
+                    <button type="button" class="btn-cancel" onclick="closePasteDataModal()">取消</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 平台配置
+        const platforms = {
+            domestic: ['淘宝', '京东', '闲鱼', '微信'],
+            foreign: ['亚马逊', 'Temu', '其他']
+        };
+
+        // 国家-货币映射
+        const countryCurrency = {
+            '美国': { symbol: '$', name: 'USD' },
+            '欧盟': { symbol: '€', name: 'EUR' },
+            '英国': { symbol: '£', name: 'GBP' },
+            '韩国': { symbol: '₩', name: 'KRW' },
+            '其他': { symbol: '$', name: 'USD' }
+        };
+
+        // 项目数据存储
+        let projects = JSON.parse(localStorage.getItem('projects')) || [];
+        let infringementData = JSON.parse(localStorage.getItem('infringementData')) || {};
+        let currentProjectId = null;
+        let selectedInfringements = new Set();
+
+        // 初始化
+        document.addEventListener('DOMContentLoaded', function() {
+            renderProjectList();
+            document.getElementById('projectForm').addEventListener('submit', handleSubmit);
+            document.getElementById('infringementForm').addEventListener('submit', handleInfringementSubmit);
+
+            // 监听抓取数据
+            setInterval(checkScrapedData, 2000);
+        });
+
+        // 检查是否有抓取的数据
+        function checkScrapedData() {
+            const scrapedData = localStorage.getItem('scrapedData');
+            if (scrapedData && currentProjectId) {
+                try {
+                    const products = JSON.parse(scrapedData);
+                    if (products && products.length > 0) {
+                        importScrapedData(products);
+                        localStorage.removeItem('scrapedData');
+                    }
+                } catch (e) {
+                    console.error('导入数据出错:', e);
+                }
+            }
+        }
+
+        // 导入抓取的数据
+        function importScrapedData(products) {
+            const project = projects.find(p => p.id === currentProjectId);
+            if (!project) {
+                alert('请先选择一个项目');
+                return;
+            }
+
+            if (!infringementData[currentProjectId]) {
+                infringementData[currentProjectId] = [];
+            }
+
+            let addedCount = 0;
+            products.forEach(item => {
+                const infringement = {
+                    id: Date.now() + Math.random(),
+                    platform: item.platform || '淘宝',
+                    productName: item.productName,
+                    image: item.image || '',
+                    shopName: item.shopName || '未知店铺',
+                    shopAddress: item.shopAddress || '',
+                    originalPrice: parseFloat(item.originalPrice?.replace(/[^\d.]/g, '')) || 0,
+                    salePrice: parseFloat(item.salePrice?.replace(/[^\d.]/g, '')) || 0,
+                    sales: item.sales || '0',
+                    reviews: parseInt(item.reviews) || 0,
+                    link: item.link,
+                    infringementType: project.infringementType,
+                    remarks: `自动抓取 - ${new Date().toLocaleString('zh-CN')}`,
+                    addedAt: new Date().toLocaleString('zh-CN')
+                };
+
+                if (infringement.salePrice > 0 && infringement.salePrice < 100000) {
+                    infringementData[currentProjectId].push(infringement);
+                    addedCount++;
+                }
+            });
+
+            localStorage.setItem('infringementData', JSON.stringify(infringementData));
+            renderInfringements();
+            alert(`🎉 成功导入 ${addedCount} 个商品！`);
+        }
+
+        // 打开创建模态框
+        function openCreateModal() {
+            document.getElementById('createModal').classList.add('show');
+        }
+
+        // 关闭创建模态框
+        function closeCreateModal() {
+            document.getElementById('createModal').classList.remove('show');
+            resetForm();
+        }
+
+        // 更新平台选项
+        function updatePlatforms() {
+            const region = document.getElementById('region').value;
+            const platformGroup = document.getElementById('platformGroup');
+            const countryGroup = document.getElementById('countryGroup');
+            const countrySelect = document.getElementById('country');
+            platformGroup.innerHTML = '';
+
+            // 显示/隐藏国家选择，动态设置required
+            if (region === 'foreign') {
+                countryGroup.style.display = 'block';
+                countrySelect.setAttribute('required', 'required');
+            } else {
+                countryGroup.style.display = 'none';
+                countrySelect.value = '';
+                countrySelect.removeAttribute('required');
+            }
+
+            // 更新价格标签
+            updatePriceLabels();
+
+            if (region && platforms[region]) {
+                platforms[region].forEach(platform => {
+                    const label = document.createElement('label');
+                    label.className = 'checkbox-item';
+                    label.innerHTML = `
+                        <input type="checkbox" name="platform" value="${platform}"> ${platform}
+                    `;
+                    platformGroup.appendChild(label);
+                });
+            }
+        }
+
+        // 更新价格标签
+        function updatePriceLabels() {
+            const region = document.getElementById('region').value;
+            const country = document.getElementById('country').value;
+            const minLabel = document.getElementById('minPriceLabel');
+            const maxLabel = document.getElementById('maxPriceLabel');
+
+            if (region === 'domestic') {
+                minLabel.innerHTML = '最小价格（元）<span class="required">*</span>';
+                maxLabel.innerHTML = '最大价格（元）<span class="required">*</span>';
+            } else if (region === 'foreign' && country && countryCurrency[country]) {
+                const currency = countryCurrency[country];
+                minLabel.innerHTML = `最小价格（${currency.symbol}）<span class="required">*</span>`;
+                maxLabel.innerHTML = `最大价格（${currency.symbol}）<span class="required">*</span>`;
+            } else {
+                minLabel.innerHTML = '最小价格（$）<span class="required">*</span>';
+                maxLabel.innerHTML = '最大价格（$）<span class="required">*</span>';
+            }
+        }
+
+        // 提交表单
+        function handleSubmit(event) {
+            event.preventDefault();
+
+            const checkedPlatforms = Array.from(document.querySelectorAll('input[name="platform"]:checked'))
+                .map(cb => cb.value);
+
+            if (checkedPlatforms.length === 0) {
+                alert('请至少选择一个平台');
+                return;
+            }
+
+            const region = document.getElementById('region').value;
+            const country = document.getElementById('country').value;
+
+            // 验证国外项目必须选择国家
+            if (region === 'foreign' && !country) {
+                alert('请选择国家');
+                return;
+            }
+
+            // 获取货币符号
+            let currencySymbol = '¥';
+            if (region === 'foreign' && country && countryCurrency[country]) {
+                currencySymbol = countryCurrency[country].symbol;
+            }
+
+            const project = {
+                id: projects.length + 1,
+                projectName: document.getElementById('projectName').value,
+                companyName: document.getElementById('companyName').value,
+                region: region === 'domestic' ? '国内' : '国外',
+                country: country || '',
+                currencySymbol: currencySymbol,
+                platforms: checkedPlatforms,
+                keywords: document.getElementById('keywords').value,
+                minPrice: parseFloat(document.getElementById('minPrice').value),
+                maxPrice: parseFloat(document.getElementById('maxPrice').value),
+                infringementType: document.getElementById('infringementType').value,
+                notes: document.getElementById('notes').value,
+                createdAt: new Date().toLocaleString('zh-CN')
+            };
+
+            projects.push(project);
+            localStorage.setItem('projects', JSON.stringify(projects));
+
+            renderProjectList();
+            closeCreateModal();
+            alert('项目创建成功！');
+        }
+
+        // 渲染项目卡片
+        // 渲染项目列表
+        function renderProjectList(filteredProjects = null) {
+            const tbody = document.getElementById('projectList');
+            const noProjectState = document.getElementById('noProjectState');
+            const dataToShow = filteredProjects || projects;
+
+            if (dataToShow.length === 0) {
+                tbody.innerHTML = '';
+                noProjectState.style.display = 'block';
+                return;
+            }
+
+            noProjectState.style.display = 'none';
+            tbody.innerHTML = dataToShow.map(project => {
+                const currency = project.currencySymbol || '¥';
+                return `
+                <tr onclick="selectProject(${project.id}, this)" data-id="${project.id}">
+                    <td>${project.id}</td>
+                    <td>${project.companyName || '-'}</td>
+                    <td><span class="project-name">${project.projectName}</span></td>
+                    <td>${project.region}</td>
+                    <td>${project.country || '-'}</td>
+                    <td>${project.platforms.join(', ')}</td>
+                    <td>${project.keywords}</td>
+                    <td>${currency}${project.minPrice} - ${currency}${project.maxPrice}</td>
+                    <td>${project.infringementType}</td>
+                    <td>${project.createdAt}</td>
+                    <td>
+                        <span class="action-link" onclick="event.stopPropagation(); exportProjectInfringements(${project.id})">导出线索</span>
+                        <span class="action-link delete" onclick="event.stopPropagation(); deleteProject(${project.id})">删除</span>
+                    </td>
+                </tr>
+            `}).join('');
+        }
+
+        // 页面切换：显示项目管理
+        function showProjectManagement() {
+            document.getElementById('projectManagementPage').style.display = 'block';
+            document.getElementById('taskManagementPage').style.display = 'none';
+            document.getElementById('dataDashboardPage').style.display = 'none';
+            document.getElementById('navProject').classList.add('active');
+            document.getElementById('navTask').classList.remove('active');
+            document.getElementById('navDashboard').classList.remove('active');
+        }
+
+        // 页面切换：显示任务管理
+        function showTaskManagement() {
+            document.getElementById('projectManagementPage').style.display = 'none';
+            document.getElementById('taskManagementPage').style.display = 'block';
+            document.getElementById('dataDashboardPage').style.display = 'none';
+            document.getElementById('navProject').classList.remove('active');
+            document.getElementById('navTask').classList.add('active');
+            document.getElementById('navDashboard').classList.remove('active');
+        }
+
+        // 页面切换：显示数据看板
+        function showDataDashboard() {
+            document.getElementById('projectManagementPage').style.display = 'none';
+            document.getElementById('taskManagementPage').style.display = 'none';
+            document.getElementById('dataDashboardPage').style.display = 'block';
+            document.getElementById('navProject').classList.remove('active');
+            document.getElementById('navTask').classList.remove('active');
+            document.getElementById('navDashboard').classList.add('active');
+        }
+
+        // 选择项目
+        function selectProject(id, row) {
+            currentProjectId = id;
+            const project = projects.find(p => p.id === id);
+
+            // 高亮选中的行
+            document.querySelectorAll('#projectList tr').forEach(tr => {
+                tr.classList.remove('active');
+            });
+            row.classList.add('active');
+
+            // 切换到任务管理页面
+            showTaskManagement();
+            document.getElementById('currentProjectTitle').textContent = `${project.projectName} - 侵权线索列表`;
+
+            // 重置选择
+            selectedInfringements.clear();
+            updateSelectedCount();
+
+            // 渲染侵权线索
+            renderInfringements();
+        }
+
+        // 渲染侵权线索
+        function renderInfringements() {
+            const list = document.getElementById('infringementList');
+            const project = projects.find(p => p.id === currentProjectId);
+            const currency = project ? (project.currencySymbol || '¥') : '¥';
+
+            // 获取当前项目的侵权线索数据
+            let projectInfringements = infringementData[currentProjectId] || [];
+
+            // 获取筛选条件
+            const salesSort = document.getElementById('salesSort').value;
+            const minReviews = parseInt(document.getElementById('minReviews').value) || 0;
+            const typeCheckboxes = document.querySelectorAll('input[type="checkbox"][value^="商标"], input[type="checkbox"][value^="专利"]');
+            const selectedTypes = Array.from(typeCheckboxes)
+                .filter(cb => cb.checked)
+                .map(cb => cb.value);
+
+            // 按侵权类型筛选
+            if (selectedTypes.length > 0) {
+                projectInfringements = projectInfringements.filter(item =>
+                    selectedTypes.includes(item.infringementType)
+                );
+            }
+
+            // 按评价数量筛选
+            if (minReviews > 0) {
+                projectInfringements = projectInfringements.filter(item =>
+                    parseInt(item.reviews) >= minReviews
+                );
+            }
+
+            // 按销量排序
+            if (salesSort === 'desc') {
+                projectInfringements.sort((a, b) => {
+                    const salesA = parseFloat(a.sales) || 0;
+                    const salesB = parseFloat(b.sales) || 0;
+                    return salesB - salesA;
+                });
+            } else if (salesSort === 'asc') {
+                projectInfringements.sort((a, b) => {
+                    const salesA = parseFloat(a.sales) || 0;
+                    const salesB = parseFloat(b.sales) || 0;
+                    return salesA - salesB;
+                });
+            }
+
+            if (projectInfringements.length === 0) {
+                list.innerHTML = `
+                    <tr>
+                        <td colspan="14" class="empty-state">
+                            暂无符合条件的侵权线索数据<br>
+                            <small>请调整筛选条件或添加新线索</small>
+                        </td>
+                    </tr>
+                `;
+                selectedInfringements.clear();
+                updateSelectedCount();
+                return;
+            }
+
+            list.innerHTML = projectInfringements.map((item, index) => `
+                <tr>
+                    <td class="checkbox-cell">
+                        <input type="checkbox" class="infringement-checkbox"
+                               data-id="${item.id}"
+                               onchange="toggleSelection(${item.id})">
+                    </td>
+                    <td>${index + 1}</td>
+                    <td>${item.image ? `<img src="${item.image}" alt="商品图片" style="width: 60px; height: 60px; object-fit: cover; border-radius: 4px;">` : ''}</td>
+                    <td>${item.platform}</td>
+                    <td>${item.productName}</td>
+                    <td>${item.shopName}</td>
+                    <td>${item.shopAddress || ''}</td>
+                    <td>${currency}${item.originalPrice}</td>
+                    <td>${currency}${item.salePrice}</td>
+                    <td>${item.sales}</td>
+                    <td>${item.reviews}</td>
+                    <td><a href="${item.link}" target="_blank" class="product-link">查看</a></td>
+                    <td>${item.infringementType}</td>
+                    <td>${item.remarks} <span class="action-link delete" onclick="deleteInfringement(${item.id})" style="margin-left: 10px;">删除</span></td>
+                </tr>
+            `).join('');
+        }
+
+        // 删除侵权线索
+        function deleteInfringement(id) {
+            if (!confirm('确定要删除这条侵权线索吗？')) {
+                return;
+            }
+
+            const projectInfringements = infringementData[currentProjectId] || [];
+            infringementData[currentProjectId] = projectInfringements.filter(item => item.id !== id);
+            localStorage.setItem('infringementData', JSON.stringify(infringementData));
+
+            // 从选中集合中移除
+            selectedInfringements.delete(id);
+
+            renderInfringements();
+            alert('侵权线索已删除');
+        }
+
+        // 切换选择
+        function toggleSelection(id) {
+            if (selectedInfringements.has(id)) {
+                selectedInfringements.delete(id);
+            } else {
+                selectedInfringements.add(id);
+            }
+            updateSelectedCount();
+        }
+
+        // 全选/取消全选
+        function toggleSelectAll() {
+            const selectAll = document.getElementById('selectAll').checked;
+            const checkboxes = document.querySelectorAll('.infringement-checkbox');
+
+            checkboxes.forEach(cb => {
+                cb.checked = selectAll;
+                const id = parseInt(cb.dataset.id);
+                if (selectAll) {
+                    selectedInfringements.add(id);
+                } else {
+                    selectedInfringements.delete(id);
+                }
+            });
+
+            updateSelectedCount();
+        }
+
+        // 更新选中数量
+        function updateSelectedCount() {
+            const count = selectedInfringements.size;
+            document.getElementById('selectedCount').textContent = `已选 ${count} 项`;
+            document.getElementById('exportSelectedBtn').disabled = count === 0;
+        }
+
+        // 导出选中的侵权线索
+        function exportSelectedInfringements() {
+            if (selectedInfringements.size === 0) {
+                alert('请先选择要导出的侵权线索');
+                return;
+            }
+
+            const projectInfringements = infringementData[currentProjectId] || [];
+            const selected = projectInfringements.filter(item => selectedInfringements.has(item.id));
+
+            if (selected.length === 0) {
+                alert('没有选中的侵权线索');
+                return;
+            }
+
+            const project = projects.find(p => p.id === currentProjectId);
+            const companyName = project ? project.companyName : '未知公司';
+            const projectName = project ? project.projectName : '未知项目';
+            const filename = `${companyName}_侵权线索_${projectName}_${new Date().toISOString().slice(0, 10)}`;
+
+            exportInfringementsToExcel(selected, filename, companyName);
+        }
+
+        // 导出项目的侵权线索
+        function exportProjectInfringements(id) {
+            const project = projects.find(p => p.id === id);
+            if (!project) {
+                alert('项目不存在');
+                return;
+            }
+
+            const projectInfringements = infringementData[id] || [];
+            if (projectInfringements.length === 0) {
+                alert('该项目暂无侵权线索数据');
+                return;
+            }
+
+            const companyName = project.companyName;
+            const projectName = project.projectName;
+            const filename = `${companyName}_侵权线索_${projectName}_${new Date().toISOString().slice(0, 10)}`;
+
+            exportInfringementsToExcel(projectInfringements, filename, companyName);
+        }
+
+        // 导出侵权线索到Excel
+        function exportInfringementsToExcel(data, filename, companyName) {
+            const project = projects.find(p => p.id === currentProjectId);
+            const currency = project ? (project.currencySymbol || '¥') : '¥';
+            const exportTime = new Date().toLocaleString('zh-CN');
+
+            const excelData = data.map((item, index) => ({
+                '序号': index + 1,
+                '平台': item.platform,
+                '商品名称': item.productName,
+                '商品图片': item.image || '',
+                '店铺名称': item.shopName,
+                '店铺地址': item.shopAddress || '',
+                '标价（原价）': `${currency}${item.originalPrice}`,
+                '售价（折扣价）': `${currency}${item.salePrice}`,
+                '销量': item.sales,
+                '评价数量': item.reviews,
+                '链接': item.link,
+                '侵权类型': item.infringementType,
+                '备注': item.remarks,
+                '添加时间': item.addedAt || ''
+            }));
+
+            // 添加公司名和导出时间信息（在前两行）
+            const headerInfo = [
+                { '序号': `公司名称：${companyName}`, '平台': '', '商品名称': '', '商品图片': '', '店铺名称': '', '店铺地址': '', '标价（原价）': '', '售价（折扣价）': '', '销量': '', '评价数量': '', '链接': '', '侵权类型': '', '备注': '', '添加时间': '' },
+                { '序号': `导出时间：${exportTime}`, '平台': '', '商品名称': '', '商品图片': '', '店铺名称': '', '店铺地址': '', '标价（原价）': '', '售价（折扣价）': '', '销量': '', '评价数量': '', '链接': '', '侵权类型': '', '备注': '', '添加时间': '' },
+                ...excelData
+            ];
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(headerInfo);
+
+            ws['!cols'] = [
+                { wch: 8 },   // 序号
+                { wch: 10 },  // 平台
+                { wch: 30 },  // 商品名称
+                { wch: 30 },  // 商品图片
+                { wch: 20 },  // 店铺名称
+                { wch: 30 },  // 店铺地址
+                { wch: 12 },  // 标价
+                { wch: 12 },  // 售价
+                { wch: 10 },  // 销量
+                { wch: 12 },  // 评价数量
+                { wch: 40 },  // 链接
+                { wch: 12 },  // 侵权类型
+                { wch: 20 },  // 备注
+                { wch: 20 }   // 添加时间
+            ];
+
+            XLSX.utils.book_append_sheet(wb, ws, '侵权线索');
+            XLSX.writeFile(wb, `${filename}.xlsx`);
+
+            alert(`已导出 ${data.length} 条侵权线索\n\n文件名：${filename}.xlsx`);
+        }
+
+        // 导出项目列表
+        function exportProjectsExcel() {
+            if (projects.length === 0) {
+                alert('暂无项目数据可导出');
+                return;
+            }
+
+            const exportTime = new Date().toLocaleString('zh-CN');
+
+            const data = projects.map((project, index) => {
+                const currency = project.currencySymbol || '¥';
+                return {
+                    '序号': index + 1,
+                    '公司名称': project.companyName || '',
+                    '项目名称': project.projectName,
+                    '地域': project.region,
+                    '国家': project.country || '',
+                    '平台': project.platforms.join(', '),
+                    '关键词': project.keywords,
+                    '价格区间': `${currency}${project.minPrice} - ${currency}${project.maxPrice}`,
+                    '侵权类型': project.infringementType,
+                    '创建日期': project.createdAt,
+                    '项目备注': project.notes || ''
+                };
+            });
+
+            // 添加导出时间信息
+            const headerInfo = [
+                { '序号': `导出时间：${exportTime}`, '公司名称': '', '项目名称': '', '地域': '', '国家': '', '平台': '', '关键词': '', '价格区间': '', '侵权类型': '', '创建日期': '', '项目备注': '' },
+                ...data
+            ];
+
+            const wb = XLSX.utils.book_new();
+            const ws = XLSX.utils.json_to_sheet(headerInfo);
+
+            ws['!cols'] = [
+                { wch: 8 },   // 序号
+                { wch: 20 },  // 公司名称
+                { wch: 20 },  // 项目名称
+                { wch: 10 },  // 地域
+                { wch: 10 },  // 国家
+                { wch: 20 },  // 平台
+                { wch: 30 },  // 关键词
+                { wch: 18 },  // 价格区间
+                { wch: 12 },  // 侵权类型
+                { wch: 20 },  // 创建日期
+                { wch: 30 }   // 项目备注
+            ];
+
+            XLSX.utils.book_append_sheet(wb, ws, '项目列表');
+            XLSX.writeFile(wb, `侵权线索监控项目_${new Date().toISOString().slice(0, 10)}.xlsx`);
+
+            alert(`已导出 ${projects.length} 个项目`);
+        }
+
+        // 搜索项目
+        function searchProjects() {
+            const keyword = document.getElementById('searchInput').value.toLowerCase();
+            const filtered = projects.filter(p =>
+                p.projectName.toLowerCase().includes(keyword)
+            );
+            renderProjectList(filtered);
+        }
+
+        // 重置搜索
+        function resetSearch() {
+            document.getElementById('searchInput').value = '';
+            renderProjectList();
+        }
+
+        // 删除项目
+        function deleteProject(id) {
+            if (confirm('确定要删除这个项目吗？相关的侵权线索数据也将被删除。')) {
+                projects = projects.filter(p => p.id !== id);
+                localStorage.setItem('projects', JSON.stringify(projects));
+
+                // 删除相关的侵权线索数据
+                delete infringementData[id];
+                localStorage.setItem('infringementData', JSON.stringify(infringementData));
+
+                renderProjectList();
+
+                // 如果删除的是当前选中的项目，切换回项目管理页面
+                if (currentProjectId === id) {
+                    showProjectManagement();
+                    currentProjectId = null;
+                }
+
+                alert('项目已删除');
+            }
+        }
+
+        // 重置表单
+        function resetForm() {
+            document.getElementById('projectForm').reset();
+            document.getElementById('platformGroup').innerHTML = '';
+        }
+
+        // 打开添加线索模态框
+        function openAddInfringementModal() {
+            if (!currentProjectId) {
+                alert('请先选择一个项目');
+                return;
+            }
+            document.getElementById('addInfringementModal').classList.add('show');
+        }
+
+        // 关闭添加线索模态框
+        function closeAddInfringementModal() {
+            document.getElementById('addInfringementModal').classList.remove('show');
+            document.getElementById('infringementForm').reset();
+        }
+
+        // 提交侵权线索表单
+        function handleInfringementSubmit(event) {
+            event.preventDefault();
+
+            if (!currentProjectId) {
+                alert('请先选择一个项目');
+                return;
+            }
+
+            const project = projects.find(p => p.id === currentProjectId);
+            if (!project) {
+                alert('项目不存在');
+                return;
+            }
+
+            // 初始化该项目的侵权线索数组
+            if (!infringementData[currentProjectId]) {
+                infringementData[currentProjectId] = [];
+            }
+
+            const infringement = {
+                id: Date.now(),
+                platform: document.getElementById('infPlatform').value,
+                productName: document.getElementById('infProductName').value,
+                image: document.getElementById('infImage').value || '',
+                shopName: document.getElementById('infShopName').value,
+                shopAddress: document.getElementById('infShopAddress').value || '',
+                originalPrice: parseFloat(document.getElementById('infOriginalPrice').value),
+                salePrice: parseFloat(document.getElementById('infSalePrice').value),
+                sales: document.getElementById('infSales').value,
+                reviews: parseInt(document.getElementById('infReviews').value),
+                link: document.getElementById('infLink').value,
+                infringementType: project.infringementType,
+                remarks: document.getElementById('infRemarks').value,
+                addedAt: new Date().toLocaleString('zh-CN')
+            };
+
+            infringementData[currentProjectId].push(infringement);
+            localStorage.setItem('infringementData', JSON.stringify(infringementData));
+
+            renderInfringements();
+            closeAddInfringementModal();
+            alert('侵权线索添加成功！');
+        }
+
+        // 一键抓取（超简单）
+        function oneClickScrape() {
+            if (!currentProjectId) {
+                alert('请先选择一个项目');
+                return;
+            }
+
+            const project = projects.find(p => p.id === currentProjectId);
+            if (!project) {
+                alert('项目不存在');
+                return;
+            }
+
+            // 保存当前项目ID供抓取助手使用
+            localStorage.setItem('currentProjectId', currentProjectId);
+
+            // 打开抓取助手页面
+            window.open('抓取助手.html', '_blank');
+        }
+
+        // 检查数据状态
+        function checkDataStatus() {
+            const scrapedData = localStorage.getItem('scrapedData');
+            const projectId = currentProjectId;
+
+            let message = '📊 数据状态检查\n\n';
+
+            // 检查项目选择
+            if (projectId) {
+                message += `✅ 已选择项目ID: ${projectId}\n`;
+            } else {
+                message += `❌ 未选择项目！\n   请在项目列表中点击选择一个项目\n\n`;
+            }
+
+            // 检查抓取数据
+            if (scrapedData) {
+                try {
+                    const products = JSON.parse(scrapedData);
+                    message += `\n✅ 发现抓取数据: ${products.length} 个商品\n`;
+                    message += `\n第1个商品示例：\n`;
+                    message += `  名称: ${products[0].productName}\n`;
+                    message += `  店铺: ${products[0].shopName}\n`;
+                    message += `  价格: ${products[0].salePrice}\n`;
+                    message += `\n${projectId ? '✅ 数据完整，可以导入！' : '⚠️ 请先选择项目，然后点击"导入抓取数据"'}`;
+                } catch (e) {
+                    message += `\n❌ 数据已损坏: ${e.message}`;
+                }
+            } else {
+                message += `\n❌ 没有找到抓取的数据\n\n`;
+                message += `请先执行抓取操作：\n`;
+                message += `1. 点击"🚀 一键抓取"\n`;
+                message += `2. 按提示在淘宝页面执行代码\n`;
+                message += `3. 看到"抓取成功"后返回这里`;
+            }
+
+            alert(message);
+            console.log('=== 数据状态检查 ===');
+            console.log('当前项目ID:', projectId);
+            console.log('抓取数据:', scrapedData ? JSON.parse(scrapedData) : '无');
+        }
+
+        // 手动导入抓取数据
+        function importScrapedDataManual() {
+            if (!currentProjectId) {
+                alert('❌ 请先选择一个项目！\n\n在项目列表中点击选择一个项目（不是创建）');
+                return;
+            }
+
+            const scrapedData = localStorage.getItem('scrapedData');
+
+            // 调试：显示是否有数据
+            if (!scrapedData) {
+                console.log('检查localStorage:', Object.keys(localStorage));
+                alert('❌ 没有找到抓取的数据！\n\n请按顺序操作：\n\n1. 点击"🚀 一键抓取"按钮\n2. 在抓取助手页面点击"打开淘宝搜索"\n3. 在淘宝页面按F12打开控制台\n4. 复制代码，粘贴到控制台，按回车\n5. 看到"抓取成功"提示\n6. 返回这里，点击"📥 导入抓取数据"\n\n⚠️ 确保第4步执行成功！在控制台应该看到提示框');
+                return;
+            }
+
+            try {
+                const products = JSON.parse(scrapedData);
+                console.log('抓取的数据:', products);
+
+                if (products.length === 0) {
+                    alert('❌ 抓取数据为空！\n\n请检查：\n1. 淘宝页面是否已完全加载\n2. 是否在搜索结果页面（不是商品详情页）');
+                    return;
+                }
+
+                alert(`✅ 找到 ${products.length} 个商品，正在导入...`);
+                importScrapedData(products);
+                localStorage.removeItem('scrapedData'); // 导入后清除
+            } catch (e) {
+                console.error('解析错误:', e);
+                alert('❌ 数据解析失败：' + e.message + '\n\n请重新抓取');
+            }
+        }
+
+        // 显示粘贴数据模态框
+        function pasteFromClipboard() {
+            if (!currentProjectId) {
+                alert('请先选择一个项目');
+                return;
+            }
+            document.getElementById('pasteDataModal').classList.add('show');
+        }
+
+        // 关闭粘贴数据模态框
+        function closePasteDataModal() {
+            document.getElementById('pasteDataModal').classList.remove('show');
+            document.getElementById('pasteContent').value = '';
+        }
+
+        // 解析粘贴的数据
+        function parsePastedData() {
+            const content = document.getElementById('pasteContent').value.trim();
+
+            if (!content) {
+                alert('请先粘贴网页内容');
+                return;
+            }
+
+            const project = projects.find(p => p.id === currentProjectId);
+            if (!project) {
+                alert('项目不存在');
+                return;
+            }
+
+            // 初始化该项目的侵权线索数组
+            if (!infringementData[currentProjectId]) {
+                infringementData[currentProjectId] = [];
+            }
+
+            // 解析粘贴的内容
+            const products = parseContent(content);
+            let addedCount = 0;
+
+            products.forEach(item => {
+                const infringement = {
+                    id: Date.now() + Math.random(),
+                    platform: item.platform || '未知',
+                    productName: item.productName || '未知商品',
+                    image: item.image || '',
+                    shopName: item.shopName || '未知店铺',
+                    shopAddress: item.shopAddress || '',
+                    originalPrice: parseFloat(item.originalPrice || 0),
+                    salePrice: parseFloat(item.salePrice || item.originalPrice || 0),
+                    sales: item.sales || '0',
+                    reviews: parseInt(item.reviews || 0),
+                    link: item.link || '',
+                    infringementType: project.infringementType,
+                    remarks: `从网页粘贴导入 - ${new Date().toLocaleString('zh-CN')}`,
+                    addedAt: new Date().toLocaleString('zh-CN')
+                };
+
+                // 过滤掉价格明显不合理的数据
+                if (infringement.salePrice > 0 && infringement.salePrice < 100000) {
+                    infringementData[currentProjectId].push(infringement);
+                    addedCount++;
+                }
+            });
+
+            localStorage.setItem('infringementData', JSON.stringify(infringementData));
+
+            renderInfringements();
+            closePasteDataModal();
+
+            if (addedCount > 0) {
+                alert(`成功导入 ${addedCount} 条侵权线索！`);
+            } else {
+                alert('未能识别出有效的商品信息，请确保：\n1. 从电商搜索结果页复制\n2. 包含商品标题、价格等信息\n3. 或使用"手动添加线索"功能');
+            }
+        }
+
+        // 解析网页内容
+        function parseContent(content) {
+            const products = [];
+
+            // 尝试多种解析模式
+            const patterns = [
+                // 淘宝/天猫模式：¥价格 标题
+                /¥([\d,]+\.?\d*)\s*[\r\n]+([^\r\n]+?)[\r\n]+/g,
+                // 京东模式：￥价格 标题
+                /￥([\d,]+\.?\d*)\s*[\r\n]+([^\r\n]+?)[\r\n]+/g,
+                // 价格在前的模式
+                /(\d+\.?\d*)\s*[元￥¥$]\s*([^\r\n]{10,100})/g
+            ];
+
+            // 简单解析：寻找价格+标题的组合
+            const lines = content.split(/[\r\n]+/);
+            let currentProduct = {};
+
+            for (let line of lines) {
+                line = line.trim();
+                if (!line) continue;
+
+                // 提取价格
+                const priceMatch = line.match(/[¥￥$]\s*(\d+\.?\d*)/);
+                if (priceMatch) {
+                    if (currentProduct.productName) {
+                        products.push({...currentProduct});
+                    }
+                    currentProduct = {
+                        originalPrice: priceMatch[1].replace(/,/g, ''),
+                        salePrice: priceMatch[1].replace(/,/g, ''),
+                        productName: line.replace(/[¥￥$]\s*\d+\.?\d*/, '').trim()
+                    };
+                } else if (line.length > 5 && line.length < 200 && !line.includes('http')) {
+                    // 可能是标题
+                    if (currentProduct.productName && !currentProduct.shopName) {
+                        currentProduct.shopName = line;
+                    } else if (!currentProduct.productName) {
+                        currentProduct.productName = line;
+                    }
+                }
+
+                // 提取链接
+                if (line.includes('http') && (line.includes('item') || line.includes('product'))) {
+                    const urlMatch = line.match(/(https?:\/\/[^\s]+)/);
+                    if (urlMatch) {
+                        currentProduct.link = urlMatch[1];
+
+                        // 根据URL判断平台
+                        if (urlMatch[1].includes('taobao.com') || urlMatch[1].includes('tmall.com')) {
+                            currentProduct.platform = '淘宝';
+                        } else if (urlMatch[1].includes('jd.com')) {
+                            currentProduct.platform = '京东';
+                        } else if (urlMatch[1].includes('amazon')) {
+                            currentProduct.platform = '亚马逊';
+                        }
+                    }
+                }
+            }
+
+            if (currentProduct.productName && currentProduct.originalPrice) {
+                products.push(currentProduct);
+            }
+
+            return products;
+        }
+    </script>
+
+    <footer style="text-align: center; padding: 20px; color: #666; font-size: 14px; margin-top: 40px; border-top: 1px solid #eee;">
+        <a href="https://github.com/houxiaoyusissi1-debug/infringement-monitor" target="_blank" style="color: #666; text-decoration: none;">查看源码</a>
+    </footer>
+</body>
+</html>
