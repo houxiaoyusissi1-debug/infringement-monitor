@@ -200,33 +200,27 @@
                 </div>
             </div>
 
-                <!-- 第4行：操作按钮 -->
-                <div style="display:flex; gap:10px;">
-                    <button class="btn-create" onclick="openAddInfringementModal()">+ 手动添加线索</button>
-                    <button class="btn-create" onclick="oneClickScrape()" style="background-color:#28a745;">🚀 打开搜索</button>
-                    <button class="btn-create" onclick="importScrapedDataManual()" style="background-color:#ffc107;color:#333;">📥 导入抓取数据</button>
-                    <button class="btn-export-selected" onclick="exportSelectedInfringements()" id="exportSelectedBtn">📥 导出选中的侵权线索</button>
-                </div>
-            </div>
-
             <div class="infringement-table-wrapper">
                 <table class="infringement-table">
                     <thead>
                         <tr>
                             <th class="checkbox-cell"><input type="checkbox" id="selectAll" onclick="toggleSelectAll()"></th>
-                            <th onclick="sortByColumn('index')">序号</th>
+                            <th>序号</th>
                             <th>图片</th>
-                            <th onclick="showColumnFilter('strikeValue', '侵权金额')">侵权金额<span id="strikeValueUnit" style="font-size:12px; font-weight:normal;">（万RMB）</span></th>
-                            <th onclick="sortByColumn('platform')">平台</th>
-                            <th onclick="sortByColumn('infringementType')">侵权类型</th>
-                            <th onclick="sortByColumn('productName')">商品名称</th>
-                            <th onclick="sortByColumn('shopName')">店铺名称</th>
-                            <th onclick="sortByColumn('address')">侵权地址</th>
+                            <th onclick="showColumnFilter('strikeValue', '侵权金额')">
+                                <div>侵权金额</div>
+                                <div id="strikeValueUnit" style="font-size:12px; font-weight:normal;">（万RMB）</div>
+                            </th>
+                            <th onclick="showColumnFilter('platform', '平台')">平台</th>
+                            <th>侵权类型</th>
+                            <th>商品名称</th>
+                            <th onclick="showColumnFilter('shopName', '店铺名称')">店铺名称</th>
+                            <th>侵权地址</th>
                             <th onclick="showColumnFilter('salePrice', '售价')">售价</th>
                             <th onclick="showColumnFilter('sales', '销量')">销量</th>
                             <th onclick="showColumnFilter('reviews', '评价数量')">评价数量</th>
-                            <th onclick="sortByColumn('link')">链接</th>
-                            <th>抓取时间</th>
+                            <th>链接</th>
+                            <th onclick="showColumnFilter('remarks', '抓取时间')">抓取时间</th>
                         </tr>
                     </thead>
                     <tbody id="infringementList"></tbody>
@@ -297,15 +291,100 @@
 </div>
 
 <!-- 列筛选卡片弹窗 -->
-<div class="column-filter-popup" id="columnFilterPopup" style="display:none; position:absolute; z-index:1000; background:white; border:1px solid #ddd; border-radius:4px; padding:10px; box-shadow:0 2px 10px rgba(0,0,0,0.1); min-width:200px;">
-    <div style="margin-bottom:8px; font-size:14px; font-weight:500;" id="filterPopupTitle">筛选</div>
-    <select id="columnFilterType" onchange="applyColumnFilter()" style="width:100%; padding:5px; border:1px solid #ddd; border-radius:4px; font-size:13px;">
-        <option value="">不筛选</option>
-        <option value="ge">≥</option>
-        <option value="desc">从高到低</option>
-        <option value="asc">从低到高</option>
-    </select>
-    <input type="number" id="columnFilterMin" placeholder="最小值" style="width:100%; margin-top:8px; padding:5px; border:1px solid #ddd; border-radius:4px; font-size:13px;" onchange="applyColumnFilter()">
+<div class="column-filter-popup" id="columnFilterPopup" style="display:none; position:absolute; z-index:1000; background:white; border:1px solid #ddd; border-radius:4px; padding:15px; box-shadow:0 2px 10px rgba(0,0,0,0.1); min-width:280px; max-width:400px;">
+    <div style="margin-bottom:15px; font-size:15px; font-weight:600; color:#333;" id="filterPopupTitle">筛选</div>
+
+    <!-- 数值型筛选：售价、销量、侵权金额、评价数量 -->
+    <div id="numericFilter" style="display:none;">
+        <div style="margin-bottom:12px;">
+            <label style="display:block; margin-bottom:5px; font-size:13px; font-weight:500; color:#333;">筛选方式</label>
+            <select id="columnFilterType" onchange="updateFilterInputVisibility()" style="width:100%; padding:6px; border:1px solid #ddd; border-radius:4px; font-size:13px;">
+                <option value="">不筛选</option>
+                <option value="ge">≥</option>
+                <option value="desc">从高到低</option>
+                <option value="asc">从低到高</option>
+                <option value="range">区间筛选</option>
+            </select>
+        </div>
+
+        <div id="singleValueInput" style="display:none;">
+            <input type="number" id="columnFilterMin" placeholder="最小值" style="width:100%; padding:6px; border:1px solid #ddd; border-radius:4px; font-size:13px;">
+        </div>
+
+        <div id="rangeValueInput" style="display:none;">
+            <div style="display:flex; gap:10px; margin-bottom:8px;">
+                <div style="flex:1;">
+                    <label style="display:block; margin-bottom:5px; font-size:12px; color:#666;">从</label>
+                    <input type="number" id="columnFilterFrom" placeholder="起始值" style="width:100%; padding:6px; border:1px solid #ddd; border-radius:4px; font-size:13px;">
+                </div>
+                <div style="flex:1;">
+                    <label style="display:block; margin-bottom:5px; font-size:12px; color:#666;">到</label>
+                    <input type="number" id="columnFilterTo" placeholder="结束值" style="width:100%; padding:6px; border:1px solid #ddd; border-radius:4px; font-size:13px;">
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- 平台筛选 -->
+    <div id="platformFilter" style="display:none;">
+        <div id="platformCheckboxes" style="display:flex; flex-direction:column; gap:8px;"></div>
+        <div style="margin-top:12px; padding-top:12px; border-top:1px solid #e0e0e0;">
+            <label style="font-size:13px; cursor:pointer; display:flex; align-items:center;">
+                <input type="checkbox" id="selectAllPlatforms" onchange="toggleAllPlatforms()" style="margin-right:8px;"> 全选
+            </label>
+        </div>
+    </div>
+
+    <!-- 店铺名称筛选 -->
+    <div id="shopNameFilter" style="display:none;">
+        <div style="margin-bottom:12px;">
+            <label style="display:block; margin-bottom:8px; font-size:13px; font-weight:500; color:#333;">排序方式</label>
+            <select id="columnFilterType" style="width:100%; padding:6px; border:1px solid #ddd; border-radius:4px; font-size:13px;">
+                <option value="">不筛选</option>
+                <option value="desc">从高到低</option>
+                <option value="asc">从低到高</option>
+            </select>
+        </div>
+        <div style="margin-bottom:12px;">
+            <label style="display:block; margin-bottom:8px; font-size:13px; font-weight:500; color:#333;">筛选店铺</label>
+            <input type="text" id="columnFilterText" placeholder="输入店铺名称" style="width:100%; padding:6px; border:1px solid #ddd; border-radius:4px; font-size:13px;">
+        </div>
+    </div>
+
+    <!-- 抓取时间筛选 -->
+    <div id="remarksFilter" style="display:none;">
+        <div style="margin-bottom:12px;">
+            <label style="display:block; margin-bottom:8px; font-size:13px; font-weight:500; color:#333;">排序方式</label>
+            <select id="columnFilterType" style="width:100%; padding:6px; border:1px solid #ddd; border-radius:4px; font-size:13px;">
+                <option value="">不筛选</option>
+                <option value="desc">从高到低</option>
+                <option value="asc">从低到高</option>
+            </select>
+        </div>
+        <div style="margin-bottom:12px;">
+            <label style="display:block; margin-bottom:8px; font-size:13px; font-weight:500; color:#333;">日期范围</label>
+            <div style="display:flex; gap:10px;">
+                <div style="flex:1;">
+                    <label style="display:block; margin-bottom:5px; font-size:12px; color:#666;">开始</label>
+                    <input type="date" id="columnFilterFrom" style="width:100%; padding:6px; border:1px solid #ddd; border-radius:4px; font-size:13px;">
+                </div>
+                <div style="flex:1;">
+                    <label style="display:block; margin-bottom:5px; font-size:12px; color:#666;">结束</label>
+                    <input type="date" id="columnFilterTo" style="width:100%; padding:6px; border:1px solid #ddd; border-radius:4px; font-size:13px;">
+                </div>
+            </div>
+        </div>
+        <div style="margin-bottom:12px;">
+            <label style="display:block; margin-bottom:8px; font-size:13px; font-weight:500; color:#333;">时间段</label>
+            <input type="text" id="columnFilterText" placeholder="手动输入时间段" style="width:100%; padding:6px; border:1px solid #ddd; border-radius:4px; font-size:13px;">
+        </div>
+    </div>
+
+    <!-- 按钮区域 -->
+    <div style="display:flex; gap:10px; margin-top:15px; padding-top:15px; border-top:1px solid #e0e0e0;">
+        <button onclick="applyColumnFilter()" style="flex:1; padding:8px 16px; background-color:#28a745; color:white; border:none; border-radius:4px; cursor:pointer; font-size:14px; font-weight:500;">确认</button>
+        <button onclick="resetColumnFilter()" style="flex:1; padding:8px 16px; background-color:#6c757d; color:white; border:none; border-radius:4px; cursor:pointer; font-size:14px; font-weight:500;">重置</button>
+    </div>
 </div>
 
 <!-- 添加线索模态框 -->
@@ -495,12 +574,32 @@
 
     function showColumnFilter(column, title) {
         var popup = document.getElementById('columnFilterPopup');
-        var filterType = document.getElementById('columnFilterType');
-        var filterMin = document.getElementById('columnFilterMin');
+        var overlay = document.getElementById('columnFilterOverlay');
         var filterTitle = document.getElementById('filterPopupTitle');
 
         currentFilterColumn = column;
         filterTitle.textContent = title;
+
+        // 隐藏所有筛选类型
+        document.getElementById('numericFilter').style.display = 'none';
+        document.getElementById('platformFilter').style.display = 'none';
+        document.getElementById('shopNameFilter').style.display = 'none';
+        document.getElementById('remarksFilter').style.display = 'none';
+
+        // 根据列类型显示对应的筛选界面
+        if (column === 'strikeValue' || column === 'salePrice' || column === 'sales' || column === 'reviews') {
+            document.getElementById('numericFilter').style.display = 'block';
+        } else if (column === 'platform') {
+            document.getElementById('platformFilter').style.display = 'block';
+            renderPlatformCheckboxes();
+        } else if (column === 'shopName') {
+            document.getElementById('shopNameFilter').style.display = 'block';
+        } else if (column === 'remarks') {
+            document.getElementById('remarksFilter').style.display = 'block';
+        }
+
+        // 显示遮罩层和弹窗
+        overlay.style.display = 'block';
 
         var event = window.event || event;
         var th = event.target.closest('th');
@@ -509,22 +608,107 @@
         popup.style.left = (rect.left + window.scrollX) + 'px';
         popup.style.display = 'block';
 
-        document.getElementById('columnFilterMin').value = '';
-        document.getElementById('columnFilterType').value = '';
+        // 重置筛选值
+        resetFilterInputs();
 
         document.addEventListener('click', function closePopup(e) {
-            if (!popup.contains(e.target) && !e.target.closest('th')) {
+            if (!popup.contains(e.target) && !e.target.closest('th') && e.target !== overlay) {
                 popup.style.display = 'none';
+                overlay.style.display = 'none';
                 document.removeEventListener('click', closePopup);
             }
         });
     }
 
-    function applyColumnFilter() {
+    function updateFilterInputVisibility() {
         var filterType = document.getElementById('columnFilterType').value;
-        var filterMin = parseFloat(document.getElementById('columnFilterMin').value) || 0;
-        currentFilterColumn = document.getElementById('filterPopupTitle').textContent;
+        if (filterType === 'range') {
+            document.getElementById('singleValueInput').style.display = 'none';
+            document.getElementById('rangeValueInput').style.display = 'block';
+        } else {
+            document.getElementById('singleValueInput').style.display = 'block';
+            document.getElementById('rangeValueInput').style.display = 'none';
+        }
+    }
+
+    function resetColumnFilter() {
         document.getElementById('columnFilterPopup').style.display = 'none';
+        document.getElementById('columnFilterOverlay').style.display = 'none';
+        resetFilterInputs();
+        applyFilters();
+    }
+
+    function resetFilterInputs() {
+        // 重置所有筛选输入框
+        var filterTypes = document.querySelectorAll('#columnFilterPopup #columnFilterType');
+        filterTypes.forEach(function(select) {
+            if (select) select.value = '';
+        });
+
+        var numberInputs = document.querySelectorAll('#columnFilterPopup input[type="number"]');
+        numberInputs.forEach(function(input) {
+            if (input) input.value = '';
+        });
+
+        var textInputs = document.querySelectorAll('#columnFilterPopup input[type="text"]');
+        textInputs.forEach(function(input) {
+            if (input) input.value = '';
+        });
+
+        var dateInputs = document.querySelectorAll('#columnFilterPopup input[type="date"]');
+        dateInputs.forEach(function(input) {
+            if (input) input.value = '';
+        });
+
+        var checkboxes = document.querySelectorAll('#columnFilterPopup input[type="checkbox"]');
+        checkboxes.forEach(function(cb) {
+            if (cb) cb.checked = false;
+        });
+
+        document.getElementById('selectAllPlatforms').checked = false;
+
+        // 隐藏区间输入
+        document.getElementById('singleValueInput').style.display = 'none';
+        document.getElementById('rangeValueInput').style.display = 'none';
+    }
+
+    function renderPlatformCheckboxes() {
+        var container = document.getElementById('platformCheckboxes');
+        var project = projects.find(function(p) { return p.id === currentProjectId; });
+        var country = project ? project.country : '中国';
+        var platforms = countryPlatforms[country] || countryPlatforms['其他'];
+        var platformCheckboxes = platforms.map(function(platform) {
+            var value = '';
+            if (platform === '淘宝') value = 'taobao';
+            else if (platform === '拼多多') value = 'pinduoduo';
+            else if (platform === '京东') value = 'jd';
+            else if (platform === '1688') value = '1688';
+            else if (platform === '亚马逊') value = 'amazon';
+            else if (platform === 'SHEIN') value = 'shein';
+            else if (platform === 'Temu') value = 'temu';
+            else value = 'other';
+            return '<label style="font-size:13px; cursor:pointer; display:flex; align-items:center; margin-bottom:5px;"><input type="checkbox" value="' + value + '" onchange="updateSelectAllState()"> ' + platform + '</label>';
+        }).join('');
+        container.innerHTML = platformCheckboxes;
+    }
+
+    function toggleAllPlatforms() {
+        var selectAll = document.getElementById('selectAllPlatforms').checked;
+        var checkboxes = document.querySelectorAll('#platformCheckboxes input[type="checkbox"]');
+        checkboxes.forEach(function(cb) {
+            cb.checked = selectAll;
+        });
+    }
+
+    function updateSelectAllState() {
+        var checkboxes = document.querySelectorAll('#platformCheckboxes input[type="checkbox"]');
+        var allChecked = Array.from(checkboxes).every(function(cb) { return cb.checked; });
+        document.getElementById('selectAllPlatforms').checked = allChecked;
+    }
+
+    function applyColumnFilter() {
+        document.getElementById('columnFilterPopup').style.display = 'none';
+        document.getElementById('columnFilterOverlay').style.display = 'none';
         applyFilters();
     }
 
