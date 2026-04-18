@@ -27,6 +27,7 @@
         .data-table { width: 100%; border-collapse: collapse; }
         .data-table th { background-color: #f8f9fa; padding: 12px; text-align: left; font-weight: 600; color: #333; border-bottom: 2px solid #e0e0e0; }
         .data-table td { padding: 12px; border-bottom: 1px solid #f0f0f0; }
+        .data-table th:first-child, .data-table td:first-child { width: 60px; }
         .data-table tbody tr { cursor: pointer; }
         .data-table tbody tr:hover { background-color: #f8f9fa; }
         .data-table tbody tr.active { background-color: #e6f7e6; }
@@ -142,6 +143,17 @@
         .infringement-table-wrapper {
             max-height: calc(100vh - 350px);
             overflow-y: auto;
+        }
+
+        .infringement-table thead {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+            background-color: #f8f9fa;
+        }
+
+        .infringement-table th {
+            background-color: #f8f9fa;
         }
     </style>
 </head>
@@ -644,19 +656,23 @@
 
     function filterByProject() {
         var filterProject = document.getElementById('filterProject').value;
+        var filterCompany = document.getElementById('filterCompany');
+
         if (filterProject !== 'all') {
-            document.getElementById('filterCompany').value = 'all';
-            document.getElementById('filterCompany').disabled = true;
+            // 如果筛选公司没有被选中，自动重置为全部公司
+            if (filterCompany.value === 'all') {
+                // 保持不变
+            } else {
+                // 筛选公司已被选中，保持不变
+            }
+            // 移除禁用逻辑
             var project = projects.find(function(p) { return p.id === filterProject; });
             if (project) {
                 updatePlatformSelector(project.country || '其他');
-                // 更新筛选卡片中的平台复选框
                 renderPlatformCheckboxes();
             }
         } else {
-            document.getElementById('filterCompany').disabled = false;
-            updatePlatformSelector('中国'); // 默认显示中国平台
-            // 更新筛选卡片中的平台复选框
+            updatePlatformSelector('中国');
             renderPlatformCheckboxes();
         }
         applyFilters();
@@ -1717,6 +1733,32 @@
         }));
     }
     function resetSearch() { document.getElementById('searchInput').value = ''; renderProjectList(); }
+
+    function searchInfringements() {
+        var keyword = document.getElementById('infringementSearchInput').value.toLowerCase();
+        var allData = currentProjectId ? infringementData[currentProjectId] || [] : [];
+
+        if (!keyword) {
+            renderInfringements(allData);
+            return;
+        }
+
+        var filteredData = allData.filter(function(item) {
+            return (item.productName || '').toLowerCase().includes(keyword) ||
+                   (item.shopName || '').toLowerCase().includes(keyword) ||
+                   (item.companyName || '').toLowerCase().includes(keyword) ||
+                   (item.infringementType || '').toLowerCase().includes(keyword) ||
+                   (item.address || '').toLowerCase().includes(keyword) ||
+                   (item.platform || '').toLowerCase().includes(keyword);
+        });
+
+        renderInfringements(filteredData);
+    }
+
+    function resetInfringementSearch() {
+        document.getElementById('infringementSearchInput').value = '';
+        renderInfringements();
+    }
 
     function deleteProject(id) {
         if (confirm('确定要删除这个项目吗？相关侵权线索也将被删除。')) {
