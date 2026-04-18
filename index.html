@@ -161,83 +161,44 @@
             <div id="autoImportNotice" class="auto-import-notice"></div>
 
             <div class="infringement-header">
-                <!-- 第1行：标题 + 已选数量（单独在最上面） -->
-                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:15px;">
+                <!-- 第1行：标题 + 已选数量 -->
+                <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:12px;">
                     <div>
                         <span class="infringement-title" id="currentProjectTitle">侵权线索列表</span>
                         <span class="selected-count" id="selectedCount" style="margin-left:15px;">已选 0 项</span>
                     </div>
                 </div>
 
-                <!-- 第2行：筛选项目 -->
-                <div class="filter-wrapper" style="margin-bottom:10px;">
-                    <div class="filter-group">
-                        <span style="font-size:14px; color:#333; font-weight:500;">筛选项目：</span>
-                        <select id="filterProject" onchange="filterByProject()" style="padding:5px 10px; border:1px solid #ddd; border-radius:4px; font-size:13px;">
-                            <option value="all">全部项目</option>
-                        </select>
+                <!-- 第2行：筛选项目 + 筛选公司 -->
+                <div style="margin-bottom:10px;">
+                    <span style="font-size:14px; color:#333; font-weight:500;">筛选项目：</span>
+                    <select id="filterProject" onchange="filterByProject()" style="padding:5px 10px; border:1px solid #ddd; border-radius:4px; font-size:13px;">
+                        <option value="all">全部项目</option>
+                    </select>
 
-                        <span style="font-size:14px; color:#333; font-weight:500;">筛选公司：</span>
-                        <select id="filterCompany" onchange="filterByCompany()" style="padding:5px 10px; border:1px solid #ddd; border-radius:4px; font-size:13px;">
-                            <option value="all">全部公司</option>
-                        </select>
-                    </div>
-
-                    <div class="filter-group">
-                        <span style="font-size:14px; color:#333; font-weight:500;">销量：</span>
-                        <select id="filterSalesType" onchange="applyFilters(); updateInputState();" style="padding:5px 10px; border:1px solid #ddd; border-radius:4px; font-size:13px;">
-                            <option value="">不筛选</option>
-                            <option value="ge">≥</option>
-                            <option value="desc">从高到低</option>
-                            <option value="asc">从低到高</option>
-                        </select>
-                        <input type="number" id="filterSalesMin" onchange="applyFilters()" placeholder="数量" style="padding:5px 10px; border:1px solid #ddd; border-radius:4px; font-size:13px; width:100px;" disabled>
-
-                        <span style="font-size:14px; color:#333; font-weight:500;">评价：</span>
-                        <select id="filterReviewsType" onchange="applyFilters(); updateInputState();" style="padding:5px 10px; border:1px solid #ddd; border-radius:4px; font-size:13px;">
-                            <option value="">不筛选</option>
-                            <option value="ge">≥</option>
-                            <option value="desc">从高到低</option>
-                            <option value="asc">从低到高</option>
-                        </select>
-                        <input type="number" id="filterReviewsMin" onchange="applyFilters()" placeholder="数量" style="padding:5px 10px; border:1px solid #ddd; border-radius:4px; font-size:13px; width:100px;" disabled>
-                    </div>
-
-                    <div class="filter-group">
-                        <span style="font-size:14px; color:#333; font-weight:500;">侵权金额：</span>
-                        <select id="filterStrikeValueType" onchange="applyFilters(); updateInputState();" style="padding:5px 10px; border:1px solid #ddd; border-radius:4px; font-size:13px;">
-                            <option value="">不筛选</option>
-                            <option value="ge">≥</option>
-                            <option value="desc">从高到低</option>
-                            <option value="asc">从低到高</option>
-                        </select>
-                        <input type="number" id="filterStrikeValueMin" onchange="applyFilters()" placeholder="万元" style="padding:5px 10px; border:1px solid #ddd; border-radius:4px; font-size:13px; width:100px;" disabled>
-                    </div>
-
-                    <div class="filter-group">
-                        <span style="font-size:14px; color:#333; font-weight:500;">侵权类型：</span>
-                        <label style="font-size:14px; cursor:pointer;"><input type="checkbox" value="商标侵权" onchange="applyFilters()"> 商标侵权</label>
-                        <label style="font-size:14px; cursor:pointer;"><input type="checkbox" value="专利侵权" onchange="applyFilters()"> 专利侵权</label>
-                        <label style="font-size:14px; cursor:pointer;"><input type="checkbox" value="版权侵权" onchange="applyFilters()"> 版权侵权</label>
-                        <label style="font-size:14px; cursor:pointer;"><input type="checkbox" value="其他" onchange="applyFilters()"> 其他</label>
-                    </div>
-
-                    <div class="filter-group">
-                        <span style="font-size:14px; color:#333; font-weight:500;">抓取时间：</span>
-                        <input type="date" id="filterDateFrom" onchange="applyFilters()" style="padding:5px 10px; border:1px solid #ddd; border-radius:4px; font-size:13px;">
-                        <span style="font-size:14px; color:#666;">至</span>
-                        <input type="date" id="filterDateTo" onchange="applyFilters()" style="padding:5px 10px; border:1px solid #ddd; border-radius:4px; font-size:13px;">
-                    </div>
+                    <span style="font-size:14px; color:#333; font-weight:500; margin-left:20px;">筛选公司：</span>
+                    <select id="filterCompany" onchange="filterByCompany()" style="padding:5px 10px; border:1px solid #ddd; border-radius:4px; font-size:13px;">
+                        <option value="all">全部公司</option>
+                    </select>
                 </div>
 
-                <!-- 第3行：选择平台 -->
-                <div style="display:flex; gap:15px; align-items:center; flex-wrap:wrap; background:#f5f5f5; padding:10px 12px; border-radius:6px; margin-bottom:10px;">
+                <!-- 第3行：操作按钮 -->
+                <div style="display:flex; gap:10px; margin-bottom:10px;">
+                    <button class="btn-create" onclick="openAddInfringementModal()">+ 手动添加线索</button>
+                    <button class="btn-create" onclick="oneClickScrape()" style="background-color:#28a745;">🚀 打开搜索</button>
+                    <button class="btn-create" onclick="importScrapedDataManual()" style="background-color:#ffc107;color:#333;">📥 导入抓取数据</button>
+                    <button class="btn-export-selected" onclick="exportSelectedInfringements()" id="exportSelectedBtn">📥 导出选中的侵权线索</button>
+                </div>
+
+                <!-- 第4行：选择平台（根据项目国家动态显示） -->
+                <div id="platformSelector" style="display:flex; gap:15px; align-items:center; flex-wrap:wrap; background:#f5f5f5; padding:10px 12px; border-radius:6px; margin-bottom:10px;">
                     <span style="font-size:14px; color:#333; font-weight:500;">选择平台：</span>
                     <label style="font-size:14px; cursor:pointer;"><input type="checkbox" value="taobao" checked onchange="filterByPlatform()"> 淘宝</label>
                     <label style="font-size:14px; cursor:pointer;"><input type="checkbox" value="pinduoduo" onchange="filterByPlatform()"> 拼多多</label>
                     <label style="font-size:14px; cursor:pointer;"><input type="checkbox" value="jd" onchange="filterByPlatform()"> 京东</label>
                     <label style="font-size:14px; cursor:pointer;"><input type="checkbox" value="1688" onchange="filterByPlatform()"> 1688</label>
                 </div>
+            </div>
 
                 <!-- 第4行：操作按钮 -->
                 <div style="display:flex; gap:10px;">
@@ -255,15 +216,15 @@
                             <th class="checkbox-cell"><input type="checkbox" id="selectAll" onclick="toggleSelectAll()"></th>
                             <th onclick="sortByColumn('index')">序号</th>
                             <th>图片</th>
-                            <th onclick="sortByColumn('strikeValue')">侵权金额</th>
+                            <th onclick="showColumnFilter('strikeValue', '侵权金额')">侵权金额<span id="strikeValueUnit" style="font-size:12px; font-weight:normal;">（万RMB）</span></th>
                             <th onclick="sortByColumn('platform')">平台</th>
                             <th onclick="sortByColumn('infringementType')">侵权类型</th>
                             <th onclick="sortByColumn('productName')">商品名称</th>
                             <th onclick="sortByColumn('shopName')">店铺名称</th>
                             <th onclick="sortByColumn('address')">侵权地址</th>
-                            <th onclick="sortByColumn('salePrice')">售价</th>
-                            <th onclick="sortByColumn('sales')">销量</th>
-                            <th onclick="sortByColumn('reviews')">评价数量</th>
+                            <th onclick="showColumnFilter('salePrice', '售价')">售价</th>
+                            <th onclick="showColumnFilter('sales', '销量')">销量</th>
+                            <th onclick="showColumnFilter('reviews', '评价数量')">评价数量</th>
                             <th onclick="sortByColumn('link')">链接</th>
                             <th>抓取时间</th>
                         </tr>
@@ -333,6 +294,18 @@
             </div>
         </form>
     </div>
+</div>
+
+<!-- 列筛选卡片弹窗 -->
+<div class="column-filter-popup" id="columnFilterPopup" style="display:none; position:absolute; z-index:1000; background:white; border:1px solid #ddd; border-radius:4px; padding:10px; box-shadow:0 2px 10px rgba(0,0,0,0.1); min-width:200px;">
+    <div style="margin-bottom:8px; font-size:14px; font-weight:500;" id="filterPopupTitle">筛选</div>
+    <select id="columnFilterType" onchange="applyColumnFilter()" style="width:100%; padding:5px; border:1px solid #ddd; border-radius:4px; font-size:13px;">
+        <option value="">不筛选</option>
+        <option value="ge">≥</option>
+        <option value="desc">从高到低</option>
+        <option value="asc">从低到高</option>
+    </select>
+    <input type="number" id="columnFilterMin" placeholder="最小值" style="width:100%; margin-top:8px; padding:5px; border:1px solid #ddd; border-radius:4px; font-size:13px;" onchange="applyColumnFilter()">
 </div>
 
 <!-- 添加线索模态框 -->
@@ -491,9 +464,67 @@
         if (filterProject !== 'all') {
             document.getElementById('filterCompany').value = 'all';
             document.getElementById('filterCompany').disabled = true;
+            var project = projects.find(function(p) { return p.id === filterProject; });
+            if (project) {
+                updatePlatformSelector(project.country || '其他');
+            }
         } else {
             document.getElementById('filterCompany').disabled = false;
+            updatePlatformSelector('中国'); // 默认显示中国平台
         }
+        applyFilters();
+    }
+
+    function updatePlatformSelector(country) {
+        var platformSelector = document.getElementById('platformSelector');
+        var platforms = countryPlatforms[country] || countryPlatforms['其他'];
+        var platformCheckboxes = platforms.map(function(platform) {
+            var value = '';
+            if (platform === '淘宝') value = 'taobao';
+            else if (platform === '拼多多') value = 'pinduoduo';
+            else if (platform === '京东') value = 'jd';
+            else if (platform === '1688') value = '1688';
+            else if (platform === '亚马逊') value = 'amazon';
+            else if (platform === 'SHEIN') value = 'shein';
+            else if (platform === 'Temu') value = 'temu';
+            else value = 'other';
+            return '<label style="font-size:14px; cursor:pointer;"><input type="checkbox" value="' + value + '" checked onchange="filterByPlatform()"> ' + platform + '</label>';
+        }).join('');
+        platformSelector.innerHTML = '<span style="font-size:14px; color:#333; font-weight:500;">选择平台：</span>' + platformCheckboxes;
+    }
+
+    function showColumnFilter(column, title) {
+        var popup = document.getElementById('columnFilterPopup');
+        var filterType = document.getElementById('columnFilterType');
+        var filterMin = document.getElementById('columnFilterMin');
+        var filterTitle = document.getElementById('filterPopupTitle');
+
+        currentFilterColumn = column;
+        filterTitle.textContent = title;
+
+        var event = window.event || event;
+        var th = event.target.closest('th');
+        var rect = th.getBoundingClientRect();
+        popup.style.top = (rect.bottom + window.scrollY) + 'px';
+        popup.style.left = (rect.left + window.scrollX) + 'px';
+        popup.style.display = 'block';
+
+        document.getElementById('columnFilterMin').value = '';
+        document.getElementById('columnFilterType').value = '';
+
+        document.addEventListener('click', function closePopup(e) {
+            if (!popup.contains(e.target) && !e.target.closest('th')) {
+                popup.style.display = 'none';
+                document.removeEventListener('click', closePopup);
+            }
+        });
+    }
+
+    function applyColumnFilter() {
+        var filterType = document.getElementById('columnFilterType').value;
+        var filterMin = parseFloat(document.getElementById('columnFilterMin').value) || 0;
+        currentFilterColumn = document.getElementById('filterPopupTitle').textContent;
+        document.getElementById('columnFilterPopup').style.display = 'none';
         applyFilters();
     }
 
@@ -513,31 +544,12 @@
         var filterProject = document.getElementById('filterProject').value;
         var filterCompany = document.getElementById('filterCompany').value;
 
-        // 销量筛选
-        var filterSalesType = document.getElementById('filterSalesType').value;
-        var filterSalesMin = parseFloat(document.getElementById('filterSalesMin').value) || 0;
-
-        // 评价筛选
-        var filterReviewsType = document.getElementById('filterReviewsType').value;
-        var filterReviewsMin = parseFloat(document.getElementById('filterReviewsMin').value) || 0;
-
-        // 侵权金额筛选
-        var filterStrikeValueType = document.getElementById('filterStrikeValueType').value;
-        var filterStrikeValueMin = parseFloat(document.getElementById('filterStrikeValueMin').value) || 0;
-
-        // 侵权类型筛选
-        var infringementTypeCheckboxes = document.querySelectorAll('input[type="checkbox"][value="商标侵权"], input[type="checkbox"][value="专利侵权"], input[type="checkbox"][value="版权侵权"], input[type="checkbox"][value="其他"]');
-        var selectedInfringementTypes = [];
-        infringementTypeCheckboxes.forEach(function(cb) {
-            if (cb.checked && cb.closest('.filter-group')) selectedInfringementTypes.push(cb.value);
-        });
-
-        // 抓取时间筛选
-        var filterDateFrom = document.getElementById('filterDateFrom').value;
-        var filterDateTo = document.getElementById('filterDateTo').value;
+        // 获取列筛选条件
+        var columnFilterType = document.getElementById('columnFilterType').value;
+        var columnFilterMin = parseFloat(document.getElementById('columnFilterMin').value) || 0;
 
         // 获取所有选中的平台
-        var checkboxes = document.querySelectorAll('#infringementSection input[type="checkbox"][value="taobao"], #infringementSection input[type="checkbox"][value="pinduoduo"], #infringementSection input[type="checkbox"][value="jd"], #infringementSection input[type="checkbox"][value="1688"]');
+        var checkboxes = document.querySelectorAll('#platformSelector input[type="checkbox"]');
         var selectedPlatforms = [];
         checkboxes.forEach(function(cb) {
             if (cb.checked) selectedPlatforms.push(cb.value);
@@ -564,72 +576,57 @@
         }
 
         // 平台筛选
-        if (selectedPlatforms.length > 0) {
+        if (selectedPlatforms.length > 0 && selectedPlatforms.length < checkboxes.length) {
             allData = allData.filter(item => selectedPlatforms.includes(item.platform.toLowerCase()));
         }
 
-        // 销量筛选
-        if (filterSalesType) {
-            var salesData = allData.map(item => ({...item, salesNum: parseSales(item.sales)}));
-            if (filterSalesType === 'ge') {
-                allData = salesData.filter(item => item.salesNum >= filterSalesMin);
-            } else if (filterSalesType === 'desc') {
-                allData = salesData.sort((a, b) => b.salesNum - a.salesNum);
-            } else if (filterSalesType === 'asc') {
-                allData = salesData.sort((a, b) => a.salesNum - b.salesNum);
-            }
-        }
+        // 列筛选（根据当前筛选的列）
+        if (columnFilterType) {
+            var columnName = document.getElementById('filterPopupTitle').textContent;
+            if (columnName === '侵权金额') {
+                // 计算侵权金额
+                allData.forEach(function(item) {
+                    item.strikeValue = (item.salePrice || 0) * parseSales(item.sales);
+                });
 
-        // 评价筛选
-        if (filterReviewsType) {
-            if (filterReviewsType === 'ge') {
-                allData = allData.filter(item => (item.reviews || 0) >= filterReviewsMin);
-            } else if (filterReviewsType === 'desc') {
-                allData = allData.sort((a, b) => (b.reviews || 0) - (a.reviews || 0));
-            } else if (filterReviewsType === 'asc') {
-                allData = allData.sort((a, b) => (a.reviews || 0) - (b.reviews || 0));
-            }
-        }
-
-        // 侵权金额筛选
-        if (filterStrikeValueType) {
-            // 计算侵权金额
-            allData.forEach(function(item) {
-                item.strikeValue = (item.salePrice || 0) * parseSales(item.sales);
-            });
-
-            if (filterStrikeValueType === 'ge') {
-                allData = allData.filter(item => item.strikeValue / 10000 >= filterStrikeValueMin);
-            } else if (filterStrikeValueType === 'desc') {
-                allData = allData.sort((a, b) => b.strikeValue - a.strikeValue);
-            } else if (filterStrikeValueType === 'asc') {
-                allData = allData.sort((a, b) => a.strikeValue - b.strikeValue);
-            }
-        }
-
-        // 侵权类型筛选
-        if (selectedInfringementTypes.length > 0) {
-            allData = allData.filter(item => selectedInfringementTypes.includes(item.infringementType));
-        }
-
-        // 抓取时间筛选
-        if (filterDateFrom || filterDateTo) {
-            allData = allData.filter(item => {
-                if (!item.addedAt) return true;
-                var itemDate = new Date(item.addedAt);
-                if (filterDateFrom && itemDate < new Date(filterDateFrom)) return false;
-                if (filterDateTo) {
-                    var filterTo = new Date(filterDateTo);
-                    filterTo.setHours(23, 59, 59, 999); // 设置为当天最后一刻
-                    if (itemDate > filterTo) return false;
+                if (columnFilterType === 'ge') {
+                    allData = allData.filter(item => item.strikeValue / 10000 >= columnFilterMin);
+                } else if (columnFilterType === 'desc') {
+                    allData = allData.sort((a, b) => b.strikeValue - a.strikeValue);
+                } else if (columnFilterType === 'asc') {
+                    allData = allData.sort((a, b) => a.strikeValue - b.strikeValue);
                 }
-                return true;
-            });
-        }
-
-        // 排序（优先使用表头排序）
-        if (currentSortColumn && !filterSalesType && !filterReviewsType && !filterStrikeValueType) {
-            allData = sortDataByColumn(allData, currentSortColumn, currentSortOrder);
+            } else if (columnName === '售价') {
+                if (columnFilterType === 'ge') {
+                    allData = allData.filter(item => (item.salePrice || 0) >= columnFilterMin);
+                } else if (columnFilterType === 'desc') {
+                    allData = allData.sort((a, b) => (b.salePrice || 0) - (a.salePrice || 0));
+                } else if (columnFilterType === 'asc') {
+                    allData = allData.sort((a, b) => (a.salePrice || 0) - (b.salePrice || 0));
+                }
+            } else if (columnName === '销量') {
+                var salesData = allData.map(item => ({...item, salesNum: parseSales(item.sales)}));
+                if (columnFilterType === 'ge') {
+                    allData = salesData.filter(item => item.salesNum >= columnFilterMin);
+                } else if (columnFilterType === 'desc') {
+                    allData = salesData.sort((a, b) => b.salesNum - a.salesNum);
+                } else if (columnFilterType === 'asc') {
+                    allData = salesData.sort((a, b) => a.salesNum - b.salesNum);
+                }
+            } else if (columnName === '评价数量') {
+                if (columnFilterType === 'ge') {
+                    allData = allData.filter(item => (item.reviews || 0) >= columnFilterMin);
+                } else if (columnFilterType === 'desc') {
+                    allData = allData.sort((a, b) => (b.reviews || 0) - (a.reviews || 0));
+                } else if (columnFilterType === 'asc') {
+                    allData = allData.sort((a, b) => (a.reviews || 0) - (b.reviews || 0));
+                }
+            }
+        } else {
+            // 如果没有列筛选，使用表头排序
+            if (currentSortColumn) {
+                allData = sortDataByColumn(allData, currentSortColumn, currentSortOrder);
+            }
         }
 
         // 渲染数据
@@ -1098,7 +1095,10 @@
 
         if (infringementDataToRender.length === 0) {
             list.innerHTML = '<tr><td colspan="14" class="empty-state">暂无侵权线索数据<br><small>点击「🚀 打开搜索」，然后在搜索页面点书签栏的书签，数据会自动出现这里</small></td></tr>';
-            selectedInfringements.clear(); updateSelectedCount(); return;
+            selectedInfringements.clear(); updateSelectedCount();
+            // 更新侵权金额列标题的货币单位
+            updateStrikeValueUnit(project);
+            return;
         }
 
         // 计算侵权金额
@@ -1107,18 +1107,37 @@
             item.canStrike = item.strikeValue >= 500000;
         });
 
+        // 更新侵权金额列标题的货币单位
+        updateStrikeValueUnit(project);
+
         // 更新表头排序样式
         updateTableHeaderStyles();
+
+        // 更新侵权金额列标题的货币单位
+        var strikeValueUnit = document.getElementById('strikeValueUnit');
+        if (strikeValueUnit && project) {
+            var currencySymbol = (project.currencySymbol || '¥');
+            var currencyName = '';
+            if (currencySymbol === '¥') currencyName = 'RMB';
+            else if (currencySymbol === '$') currencyName = '$';
+            else if (currencySymbol === '€') currencyName = '€';
+            else if (currencySymbol === '£') currencyName = '£';
+            else if (currencySymbol === '₩') currencyName = '₩';
+            else currencyName = '$';
+            strikeValueUnit.textContent = '（万' + currencyName + '）';
+        }
 
         // 渲染
         list.innerHTML = infringementDataToRender.map(function(item, index) {
             var strikeHtml = '';
             var rowClass = '';
+            var strikeValue = (item.strikeValue / 10000).toFixed(2);
+            var currencySymbol = (project ? (project.currencySymbol || '¥') : '¥');
             if (item.canStrike) {
-                strikeHtml = '<span class="strike-value">' + (item.strikeValue / 10000).toFixed(2) + '万</span><br><span class="strike-badge">建议打击</span>';
+                strikeHtml = '<span class="strike-value">' + strikeValue + currencySymbol + '</span><br><span class="strike-badge">建议打击</span>';
                 rowClass = 'can-strike';
             } else {
-                strikeHtml = (item.strikeValue / 10000).toFixed(2) + '万';
+                strikeHtml = strikeValue + currencySymbol;
             }
 
             // 图片缩略图
@@ -1174,6 +1193,23 @@
     function updateSelectedCount() {
         document.getElementById('selectedCount').textContent = '已选 ' + selectedInfringements.size + ' 项';
         document.getElementById('exportSelectedBtn').disabled = selectedInfringements.size === 0;
+    }
+
+    function updateStrikeValueUnit(project) {
+        var strikeValueUnit = document.getElementById('strikeValueUnit');
+        if (strikeValueUnit && project) {
+            var currencySymbol = (project.currencySymbol || '¥');
+            var currencyName = '';
+            if (currencySymbol === '¥') currencyName = 'RMB';
+            else if (currencySymbol === '$') currencyName = '$';
+            else if (currencySymbol === '€') currencyName = '€';
+            else if (currencySymbol === '£') currencyName = '£';
+            else if (currencySymbol === '₩') currencyName = '₩';
+            else currencyName = '$';
+            strikeValueUnit.textContent = '（万' + currencyName + '）';
+        } else if (strikeValueUnit) {
+            strikeValueUnit.textContent = '（万RMB）';
+        }
     }
 
     function exportSelectedInfringements() {
