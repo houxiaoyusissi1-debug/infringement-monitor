@@ -36,6 +36,7 @@
         .action-link.delete { color: #dc3545; }
         .infringement-section { background-color: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); display: none; }
         .infringement-section.show { display: block; }
+        .infringement-table-wrapper { overflow-x: auto; }
         .infringement-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #f0f0f0; }
         .infringement-title { font-size: 18px; font-weight: bold; color: #333; }
         .btn-export-selected { background-color: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
@@ -83,6 +84,18 @@
         .can-strike td { border-bottom: 1px solid #ffcdd2; }
         .strike-badge { background-color: #dc3545; color: white; padding: 2px 8px; border-radius: 4px; font-size: 12px; font-weight: bold; }
         .strike-value { color: #dc3545; font-weight: bold; }
+
+        /* 图片缩略图 */
+        .product-thumbnail { width: 60px; height: 60px; object-fit: cover; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; }
+        .product-thumbnail:hover { transform: scale(1.05); transition: transform 0.2s; }
+
+        /* 表头排序样式 */
+        .infringement-table th { cursor: pointer; user-select: none; }
+        .infringement-table th:hover { background-color: #e8f5e9; }
+        .infringement-table th.sort-asc::after { content: ' ▲'; }
+        .infringement-table th.sort-desc::after { content: ' ▼'; }
+        .infringement-table th:nth-child(1) { cursor: default; }
+        .infringement-table th:nth-child(1):hover { background-color: #f8f9fa; }
     </style>
 </head>
 <body>
@@ -183,18 +196,30 @@
                 </div>
             </div>
 
-            <table class="infringement-table">
-                <thead>
-                    <tr>
-                        <th class="checkbox-cell"><input type="checkbox" id="selectAll" onclick="toggleSelectAll()"></th>
-                        <th>建议打击</th>
-                        <th>序号</th><th>平台</th><th>商品名称</th><th>店铺名称</th><th>地址</th>
-                        <th>标价</th><th>售价</th><th>销量</th><th>评价数量</th>
-                        <th>链接</th><th>侵权类型</th><th>备注</th>
-                    </tr>
-                </thead>
-                <tbody id="infringementList"></tbody>
-            </table>
+            <div class="infringement-table-wrapper">
+                <table class="infringement-table">
+                    <thead>
+                        <tr>
+                            <th class="checkbox-cell"><input type="checkbox" id="selectAll" onclick="toggleSelectAll()"></th>
+                            <th onclick="sortByColumn('index')">序号</th>
+                            <th>图片</th>
+                            <th onclick="sortByColumn('strikeValue')">侵权金额（万RMB）</th>
+                            <th onclick="sortByColumn('platform')">平台</th>
+                            <th onclick="sortByColumn('productName')">商品名称</th>
+                            <th onclick="sortByColumn('shopName')">店铺名称</th>
+                            <th onclick="sortByColumn('address')">地址</th>
+                            <th onclick="sortByColumn('originalPrice')">标价</th>
+                            <th onclick="sortByColumn('salePrice')">售价</th>
+                            <th onclick="sortByColumn('sales')">销量</th>
+                            <th onclick="sortByColumn('reviews')">评价数量</th>
+                            <th>链接</th>
+                            <th onclick="sortByColumn('infringementType')">侵权类型</th>
+                            <th>备注</th>
+                        </tr>
+                    </thead>
+                    <tbody id="infringementList"></tbody>
+                </table>
+            </div>
         </div>
     </div>
 </div>
@@ -306,6 +331,8 @@
     let currentProjectId = null;
     let selectedInfringements = new Set();
     let entryMode = 'project'; // 记录进入方式：'project'（从项目进入）或'navigation'（从导航进入）
+    let currentSortColumn = 'strikeValue'; // 当前排序列
+    let currentSortOrder = 'desc'; // 当前排序方向：'asc'升序，'desc'降序
 
     function showProjectManagement() {
         entryMode = 'project';
@@ -459,23 +486,117 @@
             allData = allData.filter(item => selectedPlatforms.includes(item.platform.toLowerCase()));
         }
 
-        // 排序
-        if (salesSort === 'desc') {
-            allData.sort((a, b) => {
-                var aSales = parseSales(a.sales);
-                var bSales = parseSales(b.sales);
-                return bSales - aSales;
-            });
+        // 排序（优先使用表头排序，其次使用销量排序）
+        if (currentSortColumn) {
+            allData = sortDataByColumn(allData, currentSortColumn, currentSortOrder);
+        } else if (salesSort === 'desc') {
+            allData.sort((a, b) => parseSales(b.sales) - parseSales(a.sales));
         } else if (salesSort === 'asc') {
-            allData.sort((a, b) => {
-                var aSales = parseSales(a.sales);
-                var bSales = parseSales(b.sales);
-                return aSales - bSales;
-            });
+            allData.sort((a, b) => parseSales(a.sales) - parseSales(b.sales));
         }
 
         // 渲染数据
         renderInfringements(allData);
+    }
+
+    function sortByColumn(column) {
+        // 切换排序方向
+        if (currentSortColumn === column) {
+            currentSortOrder = currentSortOrder === 'asc' ? 'desc' : 'asc';
+        } else {
+            currentSortColumn = column;
+            currentSortOrder = 'desc';
+        }
+
+        // 更新表头样式
+        updateTableHeaderStyles();
+
+        // 重新应用筛选和排序
+        applyFilters();
+    }
+
+    function updateTableHeaderStyles() {
+        var ths = document.querySelectorAll('.infringement-table th');
+        ths.forEach(function(th) {
+            th.classList.remove('sort-asc', 'sort-desc');
+        });
+
+        var columnMap = {
+            'index': 2,
+            'strikeValue': 4,
+            'platform': 5,
+            'productName': 6,
+            'shopName': 7,
+            'address': 8,
+            'originalPrice': 9,
+            'salePrice': 10,
+            'sales': 11,
+            'reviews': 12,
+            'infringementType': 14
+        };
+
+        var thIndex = columnMap[currentSortColumn];
+        if (thIndex) {
+            ths[thIndex].classList.add(currentSortOrder === 'asc' ? 'sort-asc' : 'sort-desc');
+        }
+    }
+
+    function sortDataByColumn(data, column, order) {
+        return data.slice().sort(function(a, b) {
+            var aVal, bVal;
+
+            switch(column) {
+                case 'strikeValue':
+                    aVal = a.strikeValue || 0;
+                    bVal = b.strikeValue || 0;
+                    break;
+                case 'index':
+                    // 序号已经在渲染时计算，这里用salePrice作为替代
+                    aVal = a.salePrice || 0;
+                    bVal = b.salePrice || 0;
+                    break;
+                case 'platform':
+                    aVal = (a.platform || '').toString();
+                    bVal = (b.platform || '').toString();
+                    return order === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+                case 'productName':
+                    aVal = (a.productName || '').toString();
+                    bVal = (b.productName || '').toString();
+                    return order === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+                case 'shopName':
+                    aVal = (a.shopName || '').toString();
+                    bVal = (b.shopName || '').toString();
+                    return order === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+                case 'address':
+                    aVal = (a.address || '').toString();
+                    bVal = (b.address || '').toString();
+                    return order === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+                case 'originalPrice':
+                    aVal = parseFloat(a.originalPrice) || 0;
+                    bVal = parseFloat(b.originalPrice) || 0;
+                    break;
+                case 'salePrice':
+                    aVal = parseFloat(a.salePrice) || 0;
+                    bVal = parseFloat(b.salePrice) || 0;
+                    break;
+                case 'sales':
+                    aVal = parseSales(a.sales);
+                    bVal = parseSales(b.sales);
+                    break;
+                case 'reviews':
+                    aVal = parseInt(a.reviews) || 0;
+                    bVal = parseInt(b.reviews) || 0;
+                    break;
+                case 'infringementType':
+                    aVal = (a.infringementType || '').toString();
+                    bVal = (b.infringementType || '').toString();
+                    return order === 'asc' ? aVal.localeCompare(bVal) : bVal.localeCompare(aVal);
+                default:
+                    return 0;
+            }
+
+            return order === 'asc' ? aVal - bVal : bVal - aVal;
+        });
     }
 
     function parseSales(salesStr) {
@@ -715,35 +836,44 @@
         var infringementDataToRender = data || (currentProjectId ? infringementData[currentProjectId] || [] : []);
 
         if (infringementDataToRender.length === 0) {
-            list.innerHTML = '<tr><td colspan="13" class="empty-state">暂无侵权线索数据<br><small>点击「🚀 打开搜索」，然后在搜索页面点书签栏的书签，数据会自动出现这里</small></td></tr>';
+            list.innerHTML = '<tr><td colspan="15" class="empty-state">暂无侵权线索数据<br><small>点击「🚀 打开搜索」，然后在搜索页面点书签栏的书签，数据会自动出现这里</small></td></tr>';
             selectedInfringements.clear(); updateSelectedCount(); return;
         }
 
-        // 计算建议打击并排序
+        // 计算侵权金额
         infringementDataToRender.forEach(function(item) {
             item.strikeValue = (item.salePrice || 0) * parseSales(item.sales);
             item.canStrike = item.strikeValue >= 500000;
         });
 
-        // 按建议打击值排序（从大到小）
-        infringementDataToRender.sort(function(a, b) {
-            return b.strikeValue - a.strikeValue;
-        });
+        // 更新表头排序样式
+        updateTableHeaderStyles();
 
+        // 渲染
         list.innerHTML = infringementDataToRender.map(function(item, index) {
             var strikeHtml = '';
             var rowClass = '';
             if (item.canStrike) {
-                strikeHtml = '<span class="strike-badge">建议打击</span><br><span class="strike-value">' + (item.strikeValue / 10000).toFixed(1) + '万</span>';
+                strikeHtml = '<span class="strike-value">' + (item.strikeValue / 10000).toFixed(2) + '万</span><br><span class="strike-badge">建议打击</span>';
                 rowClass = 'can-strike';
             } else {
                 strikeHtml = (item.strikeValue / 10000).toFixed(2) + '万';
             }
 
+            // 图片缩略图
+            var imageHtml = '';
+            if (item.image) {
+                imageHtml = '<img src="' + item.image + '" class="product-thumbnail" onclick="window.open(this.src, \'_blank\')" alt="商品图片">';
+            } else {
+                imageHtml = '<span style="color:#999;">无图片</span>';
+            }
+
             return '<tr' + (rowClass ? ' class="' + rowClass + '"' : '') + '>' +
                 '<td class="checkbox-cell"><input type="checkbox" class="infringement-checkbox" data-id="' + item.id + '" onchange="toggleSelection(' + item.id + ')"></td>' +
+                '<td>' + (index+1) + '</td>' +
+                '<td>' + imageHtml + '</td>' +
                 '<td>' + strikeHtml + '</td>' +
-                '<td>' + (index+1) + '</td><td>' + item.platform + '</td><td>' + item.productName + '</td><td>' + item.shopName + '</td>' +
+                '<td>' + item.platform + '</td><td>' + item.productName + '</td><td>' + item.shopName + '</td>' +
                 '<td>' + (item.address || '-') + '</td>' +
                 '<td>' + currency + item.originalPrice + '</td><td>' + currency + item.salePrice + '</td>' +
                 '<td>' + item.sales + '</td><td>' + item.reviews + '</td>' +
