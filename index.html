@@ -36,7 +36,7 @@
         .action-link.delete { color: #dc3545; }
         /* 横向滚动容器 */
         .infringement-section.show { display: block; }
-        .infringement-table-wrapper { overflow-x: auto; }
+        .infringement-table-wrapper { overflow-x: auto; width: 100%; }
         .infringement-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 15px; border-bottom: 2px solid #f0f0f0; }
         .infringement-title { font-size: 18px; font-weight: bold; color: #333; }
         .btn-export-selected { background-color: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
@@ -1286,7 +1286,7 @@
         if (!country) { alert('请选择国家'); return; }
         var currencySymbol = country && countryCurrency[country] ? countryCurrency[country].symbol : '¥';
         var project = {
-            id: projects.length + 1,
+            id: Date.now(),
             projectName: document.getElementById('projectName').value,
             companyName: document.getElementById('companyName').value,
             region: '',
