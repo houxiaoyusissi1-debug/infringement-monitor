@@ -86,8 +86,16 @@
         .strike-value { color: #dc3545; font-weight: bold; }
 
         /* 图片缩略图 */
-        .product-thumbnail { width: 60px; height: 60px; object-fit: cover; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; }
-        .product-thumbnail:hover { transform: scale(1.05); transition: transform 0.2s; }
+        .product-thumbnail { width: 60px; height: 60px; object-fit: cover; border: 1px solid #ddd; border-radius: 4px; cursor: pointer; display: block; }
+        .product-thumbnail:hover { opacity: 0.8; }
+
+        /* 图片弹窗 */
+        .image-modal { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0,0,0,0.8); z-index: 2000; display: flex; justify-content: center; align-items: center; }
+        .image-modal.show { display: flex; }
+        .image-modal-content { background-color: white; padding: 20px; border-radius: 8px; max-width: 90vw; max-height: 90vh; }
+        .image-modal-content img { max-width: 100%; max-height: 85vh; display: block; }
+        .image-modal-close { position: absolute; top: 10px; right: 10px; font-size: 24px; cursor: pointer; color: #666; background: none; border: none; padding: 0; }
+        .image-modal-close:hover { color: #333; }
 
         /* 表头排序样式 */
         .infringement-table th { cursor: pointer; user-select: none; }
@@ -266,6 +274,15 @@
             </div>
         </div>
     </div>
+
+    <!-- 图片弹窗 -->
+    <div class="image-modal" id="imageModal" onclick="closeImageModal()">
+        <div class="image-modal-content" onclick="event.stopPropagation()">
+            <button class="image-modal-close" onclick="closeImageModal()">×</button>
+            <img id="imageModalImg" src="" alt="商品大图">
+        </div>
+    </div>
+    </div>
 </div>
 
 <!-- 创建项目模态框 -->
@@ -377,6 +394,7 @@
     let entryMode = 'project'; // 记录进入方式：'project'（从项目进入）或'navigation'（从导航进入）
     let currentSortColumn = 'strikeValue'; // 当前排序列
     let currentSortOrder = 'desc'; // 当前排序方向：'asc'升序，'desc'降序
+    let currentFilterColumn = null; // 当前筛选的列
 
     function showProjectManagement() {
         entryMode = 'project';
@@ -647,13 +665,13 @@
             'strikeValue': 4,
             'platform': 5,
             'productName': 6,
-            'shopName': 7,
-            'address': 8,
-            'originalPrice': 9,
-            'salePrice': 10,
-            'sales': 11,
-            'reviews': 12,
-            'infringementType': 14
+            'infringementType': 7,
+            'shopName': 8,
+            'address': 9,
+            'originalPrice': 10,
+            'salePrice': 11,
+            'sales': 12,
+            'reviews': 13
         };
 
         var thIndex = columnMap[currentSortColumn];
@@ -742,6 +760,113 @@
         var filterStrikeValueType = document.getElementById('filterStrikeValueType').value;
         var filterStrikeValueMin = document.getElementById('filterStrikeValueMin');
         filterStrikeValueMin.disabled = (filterStrikeValueType === '' || filterStrikeValueType === 'desc' || filterStrikeValueType === 'asc');
+    }
+
+    function openFilterModal(title, column, unit) {
+        currentFilterColumn = column;
+        document.getElementById('filterModalTitle').textContent = title + '筛选';
+        document.getElementById('filterValueLabel').textContent = title + '（' + unit + '）：';
+        document.getElementById('filterValueInput').value = '';
+        document.getElementById('filterValueInput').placeholder = '请输入' + title;
+
+        // 重置单选按钮
+        var radios = document.querySelectorAll('input[name="filterType"]');
+        radios.forEach(function(radio) {
+            radio.checked = (radio.value === '');
+        });
+
+        document.getElementById('filterValueGroup').style.display = 'none';
+        document.getElementById('filterModal').classList.add('show');
+    }
+
+    function updateFilterInputState() {
+        var selectedType = document.querySelector('input[name="filterType"]:checked').value;
+        var filterValueGroup = document.getElementById('filterValueGroup');
+        var filterValueInput = document.getElementById('filterValueInput');
+
+        if (selectedType === 'ge') {
+            filterValueGroup.style.display = 'block';
+            filterValueInput.disabled = false;
+            filterValueInput.focus();
+        } else {
+            filterValueGroup.style.display = 'none';
+            filterValueInput.disabled = true;
+        }
+    }
+
+    function closeFilterModal() {
+        document.getElementById('filterModal').classList.remove('show');
+        currentFilterColumn = null;
+    }
+
+    function applyColumnFilter() {
+        if (!currentFilterColumn) return;
+
+        var filterType = document.querySelector('input[name="filterType"]:checked').value;
+        var filterValue = parseFloat(document.getElementById('filterValueInput').value) || 0;
+
+        // 收集所有数据
+        var allData = [];
+        var filterProject = document.getElementById('filterProject').value;
+        var filterCompany = document.getElementById('filterCompany').value;
+
+        if (filterProject !== 'all') {
+            allData = infringementData[filterProject] || [];
+        } else if (filterCompany !== 'all') {
+            Object.keys(infringementData).forEach(projectId => {
+                var project = projects.find(p => p.id == projectId);
+                if (project && project.companyName === filterCompany) {
+                    allData = allData.concat(infringementData[projectId]);
+                }
+            });
+        } else {
+            Object.keys(infringementData).forEach(projectId => {
+                allData = allData.concat(infringementData[projectId]);
+            });
+        }
+
+        // 应用筛选/排序
+        if (filterType === 'ge') {
+            // ≥ 筛选
+            if (currentFilterColumn === 'sales') {
+                allData = allData.filter(item => parseSales(item.sales) >= filterValue);
+            } else if (currentFilterColumn === 'reviews') {
+                allData = allData.filter(item => (item.reviews || 0) >= filterValue);
+            } else if (currentFilterColumn === 'strikeValue') {
+                allData.forEach(function(item) {
+                    item.strikeValue = (item.salePrice || 0) * parseSales(item.sales);
+                });
+                allData = allData.filter(item => item.strikeValue / 10000 >= filterValue);
+            }
+        } else if (filterType === 'desc') {
+            // 从高到低排序
+            if (currentFilterColumn === 'sales') {
+                allData.sort((a, b) => parseSales(b.sales) - parseSales(a.sales));
+            } else if (currentFilterColumn === 'reviews') {
+                allData.sort((a, b) => (b.reviews || 0) - (a.reviews || 0));
+            } else if (currentFilterColumn === 'strikeValue') {
+                allData.forEach(function(item) {
+                    item.strikeValue = (item.salePrice || 0) * parseSales(item.sales);
+                });
+                allData.sort((a, b) => b.strikeValue - a.strikeValue);
+            }
+        } else if (filterType === 'asc') {
+            // 从低到高排序
+            if (currentFilterColumn === 'sales') {
+                allData.sort((a, b) => parseSales(a.sales) - parseSales(b.sales));
+            } else if (currentFilterColumn === 'reviews') {
+                allData.sort((a, b) => (a.reviews || 0) - (b.reviews || 0));
+            } else if (currentFilterColumn === 'strikeValue') {
+                allData.forEach(function(item) {
+                    item.strikeValue = (item.salePrice || 0) * parseSales(item.sales);
+                });
+                allData.sort((a, b) => a.strikeValue - b.strikeValue);
+            }
+        }
+
+        // 渲染数据
+        renderInfringements(allData);
+        closeFilterModal();
     }
 
     function showNotice(msg) {
@@ -1001,7 +1126,7 @@
             // 图片缩略图
             var imageHtml = '';
             if (item.image) {
-                imageHtml = '<img src="' + item.image + '" class="product-thumbnail" onclick="window.open(this.src, \'_blank\')" alt="商品图片">';
+                imageHtml = '<img src="' + item.image + '" class="product-thumbnail" onclick="openImageModal(\'' + item.image + '\')" alt="商品图片">';
             } else {
                 imageHtml = '<span style="color:#999;">无图片</span>';
             }
@@ -1011,12 +1136,13 @@
                 '<td>' + (index+1) + '</td>' +
                 '<td>' + imageHtml + '</td>' +
                 '<td>' + strikeHtml + '</td>' +
-                '<td>' + item.platform + '</td><td>' + item.productName + '</td><td>' + item.shopName + '</td>' +
+                '<td>' + item.platform + '</td><td>' + item.productName + '</td>' +
+                '<td>' + item.infringementType + '</td>' +
+                '<td>' + item.shopName + '</td>' +
                 '<td>' + (item.address || '-') + '</td>' +
                 '<td>' + currency + item.originalPrice + '</td><td>' + currency + item.salePrice + '</td>' +
                 '<td>' + item.sales + '</td><td>' + item.reviews + '</td>' +
                 '<td><a href="' + item.link + '" target="_blank" class="product-link">查看</a></td>' +
-                '<td>' + item.infringementType + '</td>' +
                 '<td>' + item.remarks + ' <span class="action-link delete" onclick="deleteInfringement(' + item.id + ')" style="margin-left:10px;">删除</span></td></tr>';
         }).join('');
     }
@@ -1127,6 +1253,19 @@
     function resetForm() { document.getElementById('projectForm').reset(); document.getElementById('platformGroup').innerHTML = ''; }
     function openAddInfringementModal() { if (!currentProjectId) { alert('请先选择一个项目'); return; } document.getElementById('addInfringementModal').classList.add('show'); }
     function closeAddInfringementModal() { document.getElementById('addInfringementModal').classList.remove('show'); document.getElementById('infringementForm').reset(); }
+
+    function openImageModal(imageUrl) {
+        var modal = document.getElementById('imageModal');
+        var img = document.getElementById('imageModalImg');
+        img.src = imageUrl;
+        modal.classList.add('show');
+        event.stopPropagation();
+    }
+
+    function closeImageModal() {
+        var modal = document.getElementById('imageModal');
+        modal.classList.remove('show');
+    }
 
     function handleInfringementSubmit(event) {
         event.preventDefault();
