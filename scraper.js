@@ -14,6 +14,20 @@
         return isNaN(n) ? '0' : n.toString();
     }
 
+    function cleanReviewCount(s) {
+        if (!s) return '0';
+        s = s.trim();
+        // 提取数字
+        var match = s.match(/(\d+)/);
+        if (match) return match[1];
+        // 处理"万"的情况
+        if (s.indexOf('万') !== -1) {
+            var n = parseFloat(s);
+            if (!isNaN(n)) return (n * 10000).toString();
+        }
+        return '0';
+    }
+
     // 查找商品链接
     function findProductLinks() {
         // 优先查找直接的商品链接
@@ -48,10 +62,12 @@
             var priceEl = card.querySelector('[class*="price"], [class*="Price"], [class*="money"]');
             var salesEl = card.querySelector('[class*="sale"], [class*="deal"]');
             var shopEl = card.querySelector('[class*="shop"], [class*="Shop"]');
+            var reviewEl = card.querySelector('[class*="review"], [class*="Review"], [class*="comment"], [class*="rate"]');
 
             var title = (titleEl.textContent || titleEl.getAttribute('title') || '').trim().substring(0, 100);
             var price = priceEl ? cleanPrice(priceEl.textContent) : '';
             var sales = salesEl ? cleanNum(salesEl.textContent) : '0';
+            var reviews = reviewEl ? cleanReviewCount(reviewEl.textContent) : '0';
             var shop = shopEl ? shopEl.textContent.trim() : '淘宝店铺';
 
             if (!title || !href) return null;
@@ -62,7 +78,7 @@
                 originalPrice: price,
                 salePrice: price,
                 sales: sales,
-                reviews: '0',
+                reviews: reviews,
                 link: href,
                 platform: '淘宝'
             };
