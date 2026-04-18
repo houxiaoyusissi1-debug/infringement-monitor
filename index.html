@@ -100,8 +100,6 @@
         /* 表头排序样式 */
         .infringement-table th { cursor: pointer; user-select: none; }
         .infringement-table th:hover { background-color: #e8f5e9; }
-        .infringement-table th.sort-asc::after { content: ' ▲'; }
-        .infringement-table th.sort-desc::after { content: ' ▼'; }
         .infringement-table th:nth-child(1) { cursor: default; }
         .infringement-table th:nth-child(1):hover { background-color: #f8f9fa; }
 
@@ -208,12 +206,17 @@
                     </select>
                 </div>
 
-                <!-- 第3行：操作按钮 -->
+                <!-- 第3行：操作按钮 + 搜索框 -->
                 <div style="display:flex; gap:10px; margin-bottom:10px;">
                     <button class="btn-create" onclick="openAddInfringementModal()">+ 手动添加线索</button>
                     <button class="btn-create" onclick="oneClickScrape()" style="background-color:#28a745;">🚀 打开搜索</button>
                     <button class="btn-create" onclick="importScrapedDataManual()" style="background-color:#ffc107;color:#333;">📥 导入抓取数据</button>
                     <button class="btn-export-selected" onclick="exportSelectedInfringements()" id="exportSelectedBtn">📥 导出选中的侵权线索</button>
+                    <div style="margin-left:auto; display:flex; gap:5px;">
+                        <input type="text" id="infringementSearchInput" placeholder="关键词搜索" style="padding:8px 12px; border:1px solid #ddd; border-radius:4px; width:200px;">
+                        <button onclick="searchInfringements()" style="padding:8px 16px; background-color:#006633; color:white; border:none; border-radius:4px; cursor:pointer;">搜索</button>
+                        <button onclick="resetInfringementSearch()" style="padding:8px 16px; background-color:white; color:#666; border:1px solid #ddd; border-radius:4px; cursor:pointer;">重置</button>
+                    </div>
                 </div>
 
                 <!-- 第4行：选择平台（根据项目国家动态显示） -->
@@ -232,6 +235,7 @@
                         <tr>
                             <th class="checkbox-cell"><input type="checkbox" id="selectAll" onclick="toggleSelectAll()"></th>
                             <th>序号</th>
+                            <th onclick="showColumnFilter('country', '国家')">国家</th>
                             <th>图片</th>
                             <th onclick="showColumnFilter('strikeValue', '侵权金额')">
                                 <div>侵权金额</div>
@@ -316,6 +320,9 @@
     </div>
 </div>
 
+<!-- 筛选卡片遮罩层 -->
+<div id="columnFilterOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background-color:rgba(0,0,0,0.3); z-index:999;"></div>
+
 <!-- 列筛选卡片弹窗 -->
 <div class="column-filter-popup" id="columnFilterPopup" style="display:none; position:absolute; z-index:1000; background:white; border:1px solid #ddd; border-radius:4px; padding:15px; box-shadow:0 2px 10px rgba(0,0,0,0.1); min-width:280px; max-width:400px;">
     <div style="margin-bottom:15px; font-size:15px; font-weight:600; color:#333;" id="filterPopupTitle">筛选</div>
@@ -348,6 +355,16 @@
                     <input type="number" id="columnFilterTo" placeholder="结束值" style="width:100%; padding:6px; border:1px solid #ddd; border-radius:4px; font-size:13px;">
                 </div>
             </div>
+        </div>
+    </div>
+
+    <!-- 国家筛选 -->
+    <div id="countryFilter" style="display:none;">
+        <div id="countryCheckboxes" style="display:flex; flex-direction:column; gap:8px;"></div>
+        <div style="margin-top:12px; padding-top:12px; border-top:1px solid #e0e0e0;">
+            <label style="font-size:13px; cursor:pointer; display:flex; align-items:center;">
+                <input type="checkbox" id="selectAllCountries" onchange="toggleAllCountries()" style="margin-right:8px;"> 全选
+            </label>
         </div>
     </div>
 
@@ -510,6 +527,10 @@
         document.getElementById('infringementSection').classList.add('show');
         document.getElementById('currentProjectTitle').textContent = '侵权线索列表';
 
+        // 更新筛选器选项
+        updateProjectFilter();
+        updateCompanyFilter();
+
         // 启用筛选器
         document.getElementById('filterProject').disabled = false;
         document.getElementById('filterCompany').disabled = false;
@@ -632,6 +653,7 @@
         document.getElementById('platformFilter').style.display = 'none';
         document.getElementById('shopNameFilter').style.display = 'none';
         document.getElementById('remarksFilter').style.display = 'none';
+        document.getElementById('countryFilter').style.display = 'none';
 
         // 根据列类型显示对应的筛选界面
         if (column === 'strikeValue' || column === 'salePrice' || column === 'sales' || column === 'reviews') {
@@ -639,6 +661,9 @@
         } else if (column === 'platform') {
             document.getElementById('platformFilter').style.display = 'block';
             renderPlatformCheckboxes();
+        } else if (column === 'country') {
+            document.getElementById('countryFilter').style.display = 'block';
+            renderCountryCheckboxes();
         } else if (column === 'shopName') {
             document.getElementById('shopNameFilter').style.display = 'block';
         } else if (column === 'remarks') {
@@ -745,6 +770,29 @@
         checkboxes.forEach(function(cb) {
             cb.checked = selectAll;
         });
+    }
+
+    function renderCountryCheckboxes() {
+        var container = document.getElementById('countryCheckboxes');
+        var countries = ['中国', '美国', '欧盟', '英国', '韩国', '其他'];
+        var countryCheckboxes = countries.map(function(country) {
+            return '<label style="font-size:13px; cursor:pointer; display:flex; align-items:center; margin-bottom:5px;"><input type="checkbox" value="' + country + '" onchange="updateSelectAllCountriesState()"> ' + country + '</label>';
+        }).join('');
+        container.innerHTML = countryCheckboxes;
+    }
+
+    function toggleAllCountries() {
+        var selectAll = document.getElementById('selectAllCountries').checked;
+        var checkboxes = document.querySelectorAll('#countryCheckboxes input[type="checkbox"]');
+        checkboxes.forEach(function(cb) {
+            cb.checked = selectAll;
+        });
+    }
+
+    function updateSelectAllCountriesState() {
+        var checkboxes = document.querySelectorAll('#countryCheckboxes input[type="checkbox"]');
+        var allChecked = Array.from(checkboxes).every(function(cb) { return cb.checked; });
+        document.getElementById('selectAllCountries').checked = allChecked;
     }
 
     function updateSelectAllState() {
@@ -1351,10 +1399,14 @@
             createdAt: new Date().toLocaleString('zh-CN')
         };
         projects.push(project);
-        localStorage.setItem('projects', JSON.stringify(projects));
-        renderProjectList();
-        closeCreateModal();
-        alert('项目创建成功！');
+        try {
+            localStorage.setItem('projects', JSON.stringify(projects));
+            renderProjectList();
+            closeCreateModal();
+            alert('项目创建成功！');
+        } catch(err) {
+            alert('❌ 项目创建失败：' + err.message);
+        }
     }
 
     function renderProjectList(filteredProjects) {
@@ -1423,7 +1475,7 @@
         var infringementDataToRender = data || (currentProjectId ? infringementData[currentProjectId] || [] : []);
 
         if (infringementDataToRender.length === 0) {
-            list.innerHTML = '<tr><td colspan="14" class="empty-state">暂无侵权线索数据<br><small>点击「🚀 打开搜索」，然后在搜索页面点书签栏的书签，数据会自动出现这里</small></td></tr>';
+            list.innerHTML = '<tr><td colspan="15" class="empty-state">暂无侵权线索数据<br><small>点击「🚀 打开搜索」，然后在搜索页面点书签栏的书签，数据会自动出现这里</small></td></tr>';
             selectedInfringements.clear(); updateSelectedCount();
             // 更新侵权金额列标题的货币单位
             updateStrikeValueUnit(project);
@@ -1480,6 +1532,7 @@
             return '<tr' + (rowClass ? ' class="' + rowClass + '"' : '') + '>' +
                 '<td class="checkbox-cell"><input type="checkbox" class="infringement-checkbox" data-id="' + item.id + '" onchange="toggleSelection(' + item.id + ')"></td>' +
                 '<td>' + (index+1) + '</td>' +
+                '<td>' + (project ? (project.country || '其他') : '其他') + '</td>' +
                 '<td>' + imageHtml + '</td>' +
                 '<td>' + strikeHtml + '</td>' +
                 '<td>' + item.platform + '</td>' +
@@ -1599,7 +1652,12 @@
 
     function searchProjects() {
         var keyword = document.getElementById('searchInput').value.toLowerCase();
-        renderProjectList(projects.filter(function(p) { return p.projectName.toLowerCase().includes(keyword); }));
+        renderProjectList(projects.filter(function(p) {
+            return p.projectName.toLowerCase().includes(keyword) ||
+                   p.companyName.toLowerCase().includes(keyword) ||
+                   (p.country || '').toLowerCase().includes(keyword) ||
+                   (p.keywords || '').toLowerCase().includes(keyword);
+        }));
     }
     function resetSearch() { document.getElementById('searchInput').value = ''; renderProjectList(); }
 
@@ -1694,7 +1752,11 @@
                         return;
                     }
 
-                    if (confirm('确定要导入此备份数据吗？\n\n⚠️ 导入将覆盖当前所有数据！\n\n备份时间：' + (backup.exportTime || '未知'))) {
+                    var projectCount = backup.projects ? backup.projects.length : 0;
+                    var infringementCount = backup.infringementData ? Object.keys(backup.infringementData).length : 0;
+                    var dataTypeInfo = '📊 导入数据类型：\n- 项目数量：' + projectCount + '\n- 侵权线索数：' + infringementCount;
+
+                    if (confirm('确定要导入此备份数据吗？\n\n' + dataTypeInfo + '\n\n⚠️ 导入将覆盖当前所有数据！\n\n备份时间：' + (backup.exportTime || '未知'))) {
                         projects = backup.projects;
                         infringementData = backup.infringementData;
                         localStorage.setItem('projects', JSON.stringify(projects));
@@ -1732,7 +1794,7 @@
                     var workbook = XLSX.read(e.target.result, { type: 'binary' });
                     var sheetName = workbook.SheetNames[0];
                     var worksheet = workbook.Sheets[sheetName];
-                    var jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
+                    var jsonData = XLSX.utils.sheet_to_json(worksheet);
 
                     if (!jsonData || jsonData.length === 0) {
                         alert('❌ Excel文件为空或格式不正确！');
@@ -1800,7 +1862,7 @@
                     alert('❌ Excel文件读取失败：' + err.message);
                 }
             };
-            reader.readAsBinaryString(file);
+            reader.readAsArrayBuffer(file);
             document.body.removeChild(input);
         };
 
