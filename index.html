@@ -255,18 +255,17 @@
                             <th class="checkbox-cell"><input type="checkbox" id="selectAll" onclick="toggleSelectAll()"></th>
                             <th onclick="sortByColumn('index')">序号</th>
                             <th>图片</th>
-                            <th onclick="sortByColumn('strikeValue')">侵权金额（万RMB）</th>
+                            <th onclick="sortByColumn('strikeValue')">侵权金额</th>
                             <th onclick="sortByColumn('platform')">平台</th>
+                            <th onclick="sortByColumn('infringementType')">侵权类型</th>
                             <th onclick="sortByColumn('productName')">商品名称</th>
                             <th onclick="sortByColumn('shopName')">店铺名称</th>
-                            <th onclick="sortByColumn('address')">地址</th>
-                            <th onclick="sortByColumn('originalPrice')">标价</th>
+                            <th onclick="sortByColumn('address')">侵权地址</th>
                             <th onclick="sortByColumn('salePrice')">售价</th>
                             <th onclick="sortByColumn('sales')">销量</th>
                             <th onclick="sortByColumn('reviews')">评价数量</th>
-                            <th>链接</th>
-                            <th onclick="sortByColumn('infringementType')">侵权类型</th>
-                            <th>备注</th>
+                            <th onclick="sortByColumn('link')">链接</th>
+                            <th>抓取时间</th>
                         </tr>
                     </thead>
                     <tbody id="infringementList"></tbody>
@@ -352,11 +351,10 @@
             <div class="form-group"><label>商品名称 <span class="required">*</span></label><input type="text" id="infProductName" required placeholder="请输入商品名称"></div>
             <div class="form-group"><label>店铺名称 <span class="required">*</span></label><input type="text" id="infShopName" required placeholder="请输入店铺名称"></div>
             <div class="form-group" style="display:flex;gap:20px;">
-                <div style="flex:1;"><label>标价（原价）<span class="required">*</span></label><input type="number" id="infOriginalPrice" required placeholder="标价"></div>
-                <div style="flex:1;"><label>售价（折扣价）<span class="required">*</span></label><input type="number" id="infSalePrice" required placeholder="售价"></div>
+                <div style="flex:1;"><label>售价<span class="required">*</span></label><input type="number" id="infSalePrice" required placeholder="售价"></div>
             </div>
             <div class="form-group" style="display:flex;gap:20px;">
-                <div style="flex:1;"><label>销量 <span class="required">*</span></label><input type="text" id="infSales" required placeholder="例如：1000+"></div>
+                <div style="flex:1;"><label>销量 <span class="required">*</span></label><input type="number" id="infSales" required placeholder="例如：1000"></div>
                 <div style="flex:1;"><label>评价数量 <span class="required">*</span></label><input type="number" id="infReviews" required placeholder="评价数量"></div>
             </div>
             <div class="form-group"><label>商品链接 <span class="required">*</span></label><input type="url" id="infLink" required placeholder="请输入商品完整链接"></div>
@@ -1099,7 +1097,7 @@
         var infringementDataToRender = data || (currentProjectId ? infringementData[currentProjectId] || [] : []);
 
         if (infringementDataToRender.length === 0) {
-            list.innerHTML = '<tr><td colspan="15" class="empty-state">暂无侵权线索数据<br><small>点击「🚀 打开搜索」，然后在搜索页面点书签栏的书签，数据会自动出现这里</small></td></tr>';
+            list.innerHTML = '<tr><td colspan="14" class="empty-state">暂无侵权线索数据<br><small>点击「🚀 打开搜索」，然后在搜索页面点书签栏的书签，数据会自动出现这里</small></td></tr>';
             selectedInfringements.clear(); updateSelectedCount(); return;
         }
 
@@ -1136,12 +1134,14 @@
                 '<td>' + (index+1) + '</td>' +
                 '<td>' + imageHtml + '</td>' +
                 '<td>' + strikeHtml + '</td>' +
-                '<td>' + item.platform + '</td><td>' + item.productName + '</td>' +
-                '<td>' + item.infringementType + '</td>' +
+                '<td>' + item.platform + '</td>' +
+                '<td>' + (item.infringementType || '-') + '</td>' +
+                '<td>' + item.productName + '</td>' +
                 '<td>' + item.shopName + '</td>' +
                 '<td>' + (item.address || '-') + '</td>' +
-                '<td>' + currency + item.originalPrice + '</td><td>' + currency + item.salePrice + '</td>' +
-                '<td>' + item.sales + '</td><td>' + item.reviews + '</td>' +
+                '<td>' + currency + item.salePrice + '</td>' +
+                '<td>' + item.sales + '</td>' +
+                '<td>' + item.reviews + '</td>' +
                 '<td><a href="' + item.link + '" target="_blank" class="product-link">查看</a></td>' +
                 '<td>' + item.remarks + ' <span class="action-link delete" onclick="deleteInfringement(' + item.id + ')" style="margin-left:10px;">删除</span></td></tr>';
         }).join('');
@@ -1198,19 +1198,18 @@
         var currency = project ? (project.currencySymbol || '¥') : '¥';
         var exportTime = new Date().toLocaleString('zh-CN');
         var excelData = data.map(function(item, index) {
-            return { '序号': index+1, '平台': item.platform, '商品名称': item.productName, '店铺名称': item.shopName,
-                '标价（原价）': currency+item.originalPrice, '售价（折扣价）': currency+item.salePrice,
-                '销量': item.sales, '评价数量': item.reviews, '链接': item.link,
-                '侵权类型': item.infringementType, '备注': item.remarks, '添加时间': item.addedAt || '' };
+            return { '序号': index+1, '平台': item.platform, '侵权类型': item.infringementType || '', '商品名称': item.productName, '店铺名称': item.shopName,
+                '售价': currency+item.salePrice, '销量': item.sales, '评价数量': item.reviews, '链接': item.link,
+                '抓取时间': item.remarks };
         });
         var headerInfo = [
-            { '序号': '公司名称：'+companyName, '平台':'','商品名称':'','店铺名称':'','标价（原价）':'','售价（折扣价）':'','销量':'','评价数量':'','链接':'','侵权类型':'','备注':'','添加时间':'' },
-            { '序号': '导出时间：'+exportTime, '平台':'','商品名称':'','店铺名称':'','标价（原价）':'','售价（折扣价）':'','销量':'','评价数量':'','链接':'','侵权类型':'','备注':'','添加时间':'' },
+            { '序号': '公司名称：'+companyName, '平台':'','侵权类型':'','商品名称':'','店铺名称':'','售价':'','销量':'','评价数量':'','链接':'','抓取时间':'' },
+            { '序号': '导出时间：'+exportTime, '平台':'','侵权类型':'','商品名称':'','店铺名称':'','售价':'','销量':'','评价数量':'','链接':'','抓取时间':'' },
             ...excelData
         ];
         var wb = XLSX.utils.book_new();
         var ws = XLSX.utils.json_to_sheet(headerInfo);
-        ws['!cols'] = [{wch:8},{wch:10},{wch:30},{wch:20},{wch:12},{wch:12},{wch:10},{wch:12},{wch:40},{wch:12},{wch:20},{wch:20}];
+        ws['!cols'] = [{wch:8},{wch:10},{wch:12},{wch:30},{wch:20},{wch:12},{wch:10},{wch:12},{wch:40},{wch:12},{wch:20},{wch:20}];
         XLSX.utils.book_append_sheet(wb, ws, '侵权线索');
         XLSX.writeFile(wb, filename + '.xlsx');
         alert('已导出 ' + data.length + ' 条侵权线索\n文件名：' + filename + '.xlsx');
@@ -1277,10 +1276,9 @@
             platform: document.getElementById('infPlatform').value,
             productName: document.getElementById('infProductName').value,
             shopName: document.getElementById('infShopName').value,
-            originalPrice: parseFloat(document.getElementById('infOriginalPrice').value),
             salePrice: parseFloat(document.getElementById('infSalePrice').value),
-            sales: document.getElementById('infSales').value,
-            reviews: parseInt(document.getElementById('infReviews').value),
+            sales: parseInt(document.getElementById('infSales').value) || 0,
+            reviews: parseInt(document.getElementById('infReviews').value) || 0,
             link: document.getElementById('infLink').value,
             infringementType: project.infringementType,
             remarks: document.getElementById('infRemarks').value,
