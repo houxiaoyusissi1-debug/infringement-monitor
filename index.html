@@ -42,7 +42,7 @@
         .btn-export-selected { background-color: #28a745; color: white; padding: 10px 20px; border: none; border-radius: 4px; cursor: pointer; font-size: 14px; }
         .btn-export-selected:hover { background-color: #218838; }
         .btn-export-selected:disabled { background-color: #ccc; cursor: not-allowed; }
-        .infringement-table { width: 100%; border-collapse: collapse; }
+        .infringement-table { width: 100%; min-width: 2000px; border-collapse: collapse; }
         .infringement-table th { background-color: #f8f9fa; padding: 12px; text-align: left; font-weight: 600; color: #333; border-bottom: 2px solid #e0e0e0; }
         .infringement-table td { padding: 12px; border-bottom: 1px solid #f0f0f0; }
         .infringement-table tr:hover { background-color: #f8f9fa; }
@@ -171,14 +171,14 @@
 
                 <!-- 第2行：筛选项目 + 筛选公司 -->
                 <div style="margin-bottom:10px;">
-                    <span style="font-size:14px; color:#333; font-weight:500;">筛选项目：</span>
-                    <select id="filterProject" onchange="filterByProject()" style="padding:5px 10px; border:1px solid #ddd; border-radius:4px; font-size:13px;">
-                        <option value="all">全部项目</option>
-                    </select>
-
-                    <span style="font-size:14px; color:#333; font-weight:500; margin-left:20px;">筛选公司：</span>
+                    <span style="font-size:14px; color:#333; font-weight:500;">筛选公司：</span>
                     <select id="filterCompany" onchange="filterByCompany()" style="padding:5px 10px; border:1px solid #ddd; border-radius:4px; font-size:13px;">
                         <option value="all">全部公司</option>
+                    </select>
+
+                    <span style="font-size:14px; color:#333; font-weight:500; margin-left:20px;">筛选项目：</span>
+                    <select id="filterProject" onchange="filterByProject()" style="padding:5px 10px; border:1px solid #ddd; border-radius:4px; font-size:13px;">
+                        <option value="all">全部项目</option>
                     </select>
                 </div>
 
@@ -1230,7 +1230,12 @@
         } catch(e) { alert('❌ 数据解析失败：' + e.message); }
     }
 
-    function openCreateModal() { document.getElementById('createModal').classList.add('show'); }
+    function openCreateModal() {
+        resetForm();
+        document.getElementById('country').value = '中国';
+        updatePlatforms();
+        document.getElementById('createModal').classList.add('show');
+    }
     function closeCreateModal() { document.getElementById('createModal').classList.remove('show'); resetForm(); }
 
     function updatePlatforms() {
