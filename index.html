@@ -166,59 +166,41 @@
         <div class="nav-item" onclick="showDashboard()">数据看板</div>
     </div>
     <div class="main-content">
-        <div class="header">
-            <h1>项目管理</h1>
-            <button class="btn-create" onclick="openCreateModal()">+ 创建项目</button>
-            <button class="btn-create" onclick="exportProjectsExcel()">📥 导出项目列表</button>
-            <button class="btn-create" style="background-color:#17a2b8;" onclick="exportBackupData()">💾 导出备份数据</button>
-            <button class="btn-create" style="background-color:#6610f2;" onclick="importBackupData()">📂 导入备份数据</button>
-            <button class="btn-create" style="background-color:#ffc107;color:#333;" onclick="importExcelFile()">📥 导入Excel文件</button>
-            <div class="search-box">
-                <input type="text" id="searchInput" placeholder="请输入项目名称">
-                <button class="btn-search" onclick="searchProjects()">搜索</button>
-                <button class="btn-reset" onclick="resetSearch()">重置</button>
-            </div>
-        </div>
-
-        <div class="table-container">
-            <table class="data-table">
-                <thead>
-                    <tr>
-                        <th>编号</th><th>公司名称</th><th>项目名称</th><th>国家</th>
-                        <th>平台</th><th>关键词</th><th>价格区间</th>
-                        <th>侵权线索数量</th><th>销量总额</th><th>评价数量</th>
-                        <th>侵权类型</th><th>创建日期</th><th>操作</th>
-                    </tr>
-                </thead>
-                <tbody id="projectList"></tbody>
-            </table>
-            <div id="noProjectState" class="empty-state" style="display:none;">暂无项目，点击"创建项目"开始</div>
-        </div>
-
-        <div id="dashboardSection" class="table-container" style="display:none;">
+        <!-- 项目管理页面 -->
+        <div id="projectManagementSection">
             <div class="header">
-                <h1>数据看板</h1>
-            </div>
-            <div style="display:flex; flex-direction:column; align-items:center; gap:20px; padding:60px 20px;">
-                <div style="display:flex; align-items:center; gap:30px; max-width:800px; background:#e8f5e9; padding:50px; border-radius:12px;">
-                    <div style="text-align:center;">
-                        <div style="font-size:64px; font-weight:bold; color:#2e7d32; margin-bottom:10px;" id="dashboardProjectCount">0</div>
-                        <div style="font-size:18px; color:#4caf50;">项目数量</div>
-                    </div>
-                    <div style="text-align:center;">
-                        <div style="font-size:64px; font-weight:bold; color:#2e7d32; margin-bottom:10px;" id="dashboardInfringementCount">0</div>
-                        <div style="font-size:18px; color:#4caf50;">侵权数量</div>
-                    </div>
+                <h1>项目管理</h1>
+                <button class="btn-create" onclick="openCreateModal()">+ 创建项目</button>
+                <button class="btn-create" onclick="exportProjectsExcel()">📥 导出项目列表</button>
+                <button class="btn-create" style="background-color:#17a2b8;" onclick="exportBackupData()">💾 导出备份数据</button>
+                <button class="btn-create" style="background-color:#6610f2;" onclick="importBackupData()">📂 导入备份数据</button>
+                <button class="btn-create" style="background-color:#ffc107;color:#333;" onclick="importExcelFile()">📥 导入Excel文件</button>
+                <div class="search-box">
+                    <input type="text" id="searchInput" placeholder="请输入项目名称">
+                    <button class="btn-search" onclick="searchProjects()">搜索</button>
+                    <button class="btn-reset" onclick="resetSearch()">重置</button>
                 </div>
             </div>
-            <div style="margin-top:40px; text-align:center;">
-                <button class="btn-create" onclick="window.open('https://github.com/houxiaoyusissi1-debug/infringement-monitor/blob/main/需求文档_v2r3.md', '_blank')" style="background-color:#17a2b8;">
-                    📄 查看需求文档
-                </button>
+
+            <div class="table-container">
+                <table class="data-table">
+                    <thead>
+                        <tr>
+                            <th>编号</th><th>公司名称</th><th>项目名称</th><th>国家</th>
+                            <th>平台</th><th>关键词</th><th>价格区间</th>
+                            <th>侵权线索数量</th><th>销量总额</th><th>评价数量</th>
+                            <th>侵权类型</th><th>创建日期</th><th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody id="projectList"></tbody>
+                </table>
+                <div id="noProjectState" class="empty-state" style="display:none;">暂无项目，点击"创建项目"开始</div>
             </div>
         </div>
 
-        <div id="infringementSection" class="infringement-section">
+        <!-- 任务管理页面 -->
+        <div id="taskManagementSection" style="display:none;">
+            <div id="infringementSection" class="infringement-section" style="display:block;">
 
             <!-- 书签安装提示 -->
             <div class="bookmarklet-banner">
@@ -309,8 +291,32 @@
                     <tbody id="infringementList"></tbody>
                 </table>
             </div>
+            </div>
         </div>
-    </div>
+
+        <!-- 数据看板 -->
+        <div id="dashboardSection" class="table-container" style="display:none;">
+            <div class="header">
+                <h1>数据看板</h1>
+            </div>
+            <div style="display:flex; flex-direction:column; align-items:center; gap:20px; padding:60px 20px;">
+                <div style="display:flex; align-items:center; gap:30px; max-width:800px; background:#e8f5e9; padding:50px; border-radius:12px;">
+                    <div style="text-align:center;">
+                        <div style="font-size:64px; font-weight:bold; color:#2e7d32; margin-bottom:10px;" id="dashboardProjectCount">0</div>
+                        <div style="font-size:18px; color:#4caf50;">项目数量</div>
+                    </div>
+                    <div style="text-align:center;">
+                        <div style="font-size:64px; font-weight:bold; color:#2e7d32; margin-bottom:10px;" id="dashboardInfringementCount">0</div>
+                        <div style="font-size:18px; color:#4caf50;">侵权数量</div>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top:40px; text-align:center;">
+                <button class="btn-create" onclick="window.open('https://github.com/houxiaoyusissi1-debug/infringement-monitor/blob/main/需求文档_v2r3.md', '_blank')" style="background-color:#17a2b8;">
+                    📄 查看需求文档
+                </button>
+            </div>
+        </div>
 
     <!-- 图片弹窗 -->
     <div class="image-modal" id="imageModal" onclick="closeImageModal()">
@@ -547,7 +553,13 @@
         currentProjectId = null;
         document.querySelectorAll('.nav-item')[0].classList.add('active');
         document.querySelectorAll('.nav-item')[1].classList.remove('active');
-        document.getElementById('infringementSection').classList.remove('show');
+        document.querySelectorAll('.nav-item')[2].classList.remove('active');
+
+        // 显示项目管理页面，隐藏其他页面
+        document.getElementById('projectManagementSection').style.display = 'block';
+        document.getElementById('taskManagementSection').style.display = 'none';
+        document.getElementById('dashboardSection').style.display = 'none';
+
         renderProjectList();
     }
 
@@ -558,7 +570,9 @@
         document.querySelectorAll('.nav-item')[0].classList.remove('active');
         document.querySelectorAll('.nav-item')[1].classList.remove('active');
 
-        document.getElementById('infringementSection').classList.remove('show');
+        // 显示数据看板，隐藏其他页面
+        document.getElementById('projectManagementSection').style.display = 'none';
+        document.getElementById('taskManagementSection').style.display = 'none';
         document.getElementById('dashboardSection').style.display = 'block';
 
         // 计算统计数据
@@ -577,7 +591,13 @@
         currentProjectId = null;
         document.querySelectorAll('.nav-item')[1].classList.add('active');
         document.querySelectorAll('.nav-item')[0].classList.remove('active');
-        document.getElementById('infringementSection').classList.add('show');
+        document.querySelectorAll('.nav-item')[2].classList.remove('active');
+
+        // 显示任务管理页面，隐藏其他页面
+        document.getElementById('projectManagementSection').style.display = 'none';
+        document.getElementById('taskManagementSection').style.display = 'block';
+        document.getElementById('dashboardSection').style.display = 'none';
+
         document.getElementById('currentProjectTitle').textContent = '侵权线索列表';
 
         // 更新筛选器选项
