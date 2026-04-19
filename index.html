@@ -184,10 +184,10 @@
             <table class="data-table">
                 <thead>
                     <tr>
-                        <th>编号</th><th>公司名称</th><th>项目名称</th><th>国家</th>
-                        <th>平台</th><th>关键词</th><th>价格区间</th>
-                        <th>侵权线索数量</th><th>销量总额</th><th>评价数量</th>
-                        <th>侵权类型</th><th>创建日期</th><th>操作</th>
+                        <th>编号</th><th onclick="showProjectFilter('companyName', '公司名称')">公司名称</th><th onclick="showProjectFilter('projectName', '项目名称')">项目名称</th><th onclick="showProjectFilter('country', '国家')">国家</th>
+                        <th onclick="showProjectFilter('platform', '平台')">平台</th><th onclick="showProjectFilter('keywords', '关键词')">关键词</th><th onclick="showProjectFilter('priceRange', '价格区间')">价格区间</th>
+                        <th onclick="showProjectFilter('infringementCount', '侵权线索数量')">侵权线索数量</th><th onclick="showProjectFilter('salesTotal', '销量总额')">销量总额</th><th onclick="showProjectFilter('reviewCount', '评价数量')">评价数量</th>
+                        <th onclick="showProjectFilter('infringementType', '侵权类型')">侵权类型</th><th onclick="showProjectFilter('createdAt', '创建日期')">创建日期</th><th>操作</th>
                     </tr>
                 </thead>
                 <tbody id="projectList"></tbody>
