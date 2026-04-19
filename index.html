@@ -256,26 +256,26 @@
                     <button onclick="applyCompanyProjectFilters()" style="padding:5px 16px; background-color:#28a745; color:white; border:none; border-radius:4px; cursor:pointer; font-size:13px; margin-left:10px;">确认</button>
                 </div>
 
-                <!-- 第3行：操作按钮 + 搜索框 -->
-                <div style="display:flex; gap:10px; margin-bottom:10px;">
+                <!-- 第3行：操作按钮 + 平台选择 + 搜索框 -->
+                <div style="display:flex; gap:10px; margin-bottom:10px; align-items:center;">
                     <button class="btn-create" onclick="openAddInfringementModal()">+ 手动添加线索</button>
                     <button class="btn-create" onclick="oneClickScrape()" style="background-color:#28a745;">🚀 打开搜索</button>
                     <button class="btn-create" onclick="importScrapedDataManual()" style="background-color:#ffc107;color:#333;">📥 导入抓取数据</button>
                     <button class="btn-export-selected" onclick="exportSelectedInfringements()" id="exportSelectedBtn">📥 导出选中的侵权线索</button>
+
+                    <div id="platformSelector" style="display:flex; gap:15px; align-items:center; background:#f5f5f5; padding:8px 12px; border-radius:6px;">
+                        <span style="font-size:14px; color:#333; font-weight:500;">选择平台：</span>
+                        <label style="font-size:14px; cursor:pointer;"><input type="checkbox" value="taobao" checked onchange="filterByPlatform()"> 淘宝</label>
+                        <label style="font-size:14px; cursor:pointer;"><input type="checkbox" value="pinduoduo" onchange="filterByPlatform()"> 拼多多</label>
+                        <label style="font-size:14px; cursor:pointer;"><input type="checkbox" value="jd" onchange="filterByPlatform()"> 京东</label>
+                        <label style="font-size:14px; cursor:pointer;"><input type="checkbox" value="1688" onchange="filterByPlatform()"> 1688</label>
+                    </div>
+
                     <div style="margin-left:auto; display:flex; gap:5px;">
                         <input type="text" id="infringementSearchInput" placeholder="关键词搜索" style="padding:8px 12px; border:1px solid #ddd; border-radius:4px; width:200px;">
                         <button onclick="searchInfringements()" style="padding:8px 16px; background-color:#006633; color:white; border:none; border-radius:4px; cursor:pointer;">搜索</button>
                         <button onclick="resetInfringementSearch()" style="padding:8px 16px; background-color:white; color:#666; border:1px solid #ddd; border-radius:4px; cursor:pointer;">重置</button>
                     </div>
-                </div>
-
-                <!-- 第4行：选择平台（根据项目国家动态显示） -->
-                <div id="platformSelector" style="display:flex; gap:15px; align-items:center; flex-wrap:wrap; background:#f5f5f5; padding:10px 12px; border-radius:6px; margin-bottom:10px;">
-                    <span style="font-size:14px; color:#333; font-weight:500;">选择平台：</span>
-                    <label style="font-size:14px; cursor:pointer;"><input type="checkbox" value="taobao" checked onchange="filterByPlatform()"> 淘宝</label>
-                    <label style="font-size:14px; cursor:pointer;"><input type="checkbox" value="pinduoduo" onchange="filterByPlatform()"> 拼多多</label>
-                    <label style="font-size:14px; cursor:pointer;"><input type="checkbox" value="jd" onchange="filterByPlatform()"> 京东</label>
-                    <label style="font-size:14px; cursor:pointer;"><input type="checkbox" value="1688" onchange="filterByPlatform()"> 1688</label>
                 </div>
             </div>
 
@@ -289,13 +289,14 @@
                             <th>图片</th>
                             <th onclick="showColumnFilter('strikeValue', '侵权金额')">
                                 <div>侵权金额</div>
-                                <div id="strikeValueUnit" style="font-size:12px; font-weight:normal;">（RMB）</div>
+                                <div id="strikeValueUnit" style="font-size:12px; font-weight:normal;">（万RMB）</div>
                             </th>
                             <th onclick="showColumnFilter('platform', '平台')">平台</th>
                             <th>侵权类型</th>
                             <th>商品名称</th>
                             <th onclick="showColumnFilter('shopName', '店铺名称')">店铺名称</th>
-                            <th>侵权地址</th>
+                            <th>公司名称</th>
+                            <th>地址</th>
                             <th onclick="showColumnFilter('salePrice', '售价')">售价</th>
                             <th onclick="showColumnFilter('sales', '销量')">销量</th>
                             <th onclick="showColumnFilter('reviews', '评价数量')">评价数量</th>
@@ -1550,7 +1551,7 @@
         var infringementDataToRender = data || (currentProjectId ? infringementData[currentProjectId] || [] : []);
 
         if (infringementDataToRender.length === 0) {
-            list.innerHTML = '<tr><td colspan="15" class="empty-state">暂无侵权线索数据<br><small>点击「🚀 打开搜索」，然后在搜索页面点书签栏的书签，数据会自动出现这里</small></td></tr>';
+            list.innerHTML = '<tr><td colspan="16" class="empty-state">暂无侵权线索数据<br><small>点击「🚀 打开搜索」，然后在搜索页面点书签栏的书签，数据会自动出现这里</small></td></tr>';
             selectedInfringements.clear(); updateSelectedCount();
             // 更新侵权金额列标题的货币单位
             updateStrikeValueUnit(project);
@@ -1614,6 +1615,7 @@
                 '<td>' + (item.infringementType || '-') + '</td>' +
                 '<td><div class="text-clamp-2" title="' + (item.productName || '') + '">' + (item.productName || '-') + '</div></td>' +
                 '<td><div class="text-clamp-2" title="' + (item.shopName || '') + '">' + (item.shopName || '-') + '</div></td>' +
+                '<td><div class="text-clamp-2" title="' + (item.companyName || '') + '">' + (item.companyName || '-') + '</div></td>' +
                 '<td><div class="text-clamp-2" title="' + (item.address || '') + '">' + (item.address || '-') + '</div></td>' +
                 '<td>' + currency + item.salePrice + '</td>' +
                 '<td>' + item.sales + '</td>' +
@@ -1663,9 +1665,9 @@
             else if (currencySymbol === '£') currencyName = '£';
             else if (currencySymbol === '₩') currencyName = '₩';
             else currencyName = '$';
-            strikeValueUnit.textContent = '（' + currencyName + '）';
+            strikeValueUnit.textContent = '（万' + currencyName + '）';
         } else if (strikeValueUnit) {
-            strikeValueUnit.textContent = '（RMB）';
+            strikeValueUnit.textContent = '（万RMB）';
         }
     }
 
