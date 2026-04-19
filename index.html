@@ -1652,7 +1652,51 @@
     }
 
     function openSearchModal() {
-        document.getElementById('searchModal').classList.add('show');
+        if (!currentProjectId) {
+            alert('请先选择一个项目');
+            return;
+        }
+
+        var project = projects.find(function(p) { return p.id === currentProjectId; });
+        if (!project) {
+            alert('项目不存在');
+            return;
+        }
+
+        var keywords = project.keywords.split(';').map(k => k.trim()).filter(k => k);
+        if (keywords.length === 0) {
+            alert('该项目没有设置关键词');
+            return;
+        }
+
+        var country = project.country || '中国';
+        var platforms = countryPlatforms[country] || countryPlatforms['其他'];
+
+        // 构建搜索链接
+        var searchUrls = [];
+        platforms.forEach(function(platform) {
+            var keyword = keywords[0];
+            if (platform === '淘宝') {
+                searchUrls.push('https://s.taobao.com/search?q=' + encodeURIComponent(keyword));
+            } else if (platform === '京东') {
+                searchUrls.push('https://search.jd.com/Search?keyword=' + encodeURIComponent(keyword));
+            } else if (platform === '亚马逊') {
+                if (country === '美国') {
+                    searchUrls.push('https://www.amazon.com/s?k=' + encodeURIComponent(keyword));
+                } else if (country === '欧盟') {
+                    searchUrls.push('https://www.amazon.de/s?k=' + encodeURIComponent(keyword));
+                } else if (country === '英国') {
+                    searchUrls.push('https://www.amazon.co.uk/s?k=' + encodeURIComponent(keyword));
+                }
+            } else if (platform === '1688') {
+                searchUrls.push('https://s.1688.com/selloffer/offer_search.htm?keywords=' + encodeURIComponent(keyword));
+            }
+        });
+
+        // 打开所有搜索链接
+        searchUrls.forEach(function(url) {
+            window.open(url, '_blank');
+        });
     }
 
     function closeSearchModal() {
