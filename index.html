@@ -570,8 +570,10 @@
     }
 
     function showTaskManagement() {
-        entryMode = 'navigation';
-        currentProjectId = null;
+        if (!currentProjectId) {
+            entryMode = 'navigation';
+            currentProjectId = null;
+        }
         document.querySelectorAll('.nav-item')[1].classList.add('active');
         document.querySelectorAll('.nav-item')[0].classList.remove('active');
 
@@ -579,17 +581,17 @@
         document.getElementById('projectManagementSection').style.display = 'none';
         document.getElementById('taskManagementSection').style.display = 'block';
 
-        document.getElementById('currentProjectTitle').textContent = '侵权线索列表';
+        if (!currentProjectId) {
+            document.getElementById('currentProjectTitle').textContent = '侵权线索列表';
+        }
 
         // 更新筛选器选项
         updateProjectFilter();
         updateCompanyFilter();
 
-        // 启用筛选器
+        // 启用筛选器（但不重置值，保留通过selectProject设置的值）
         document.getElementById('filterProject').disabled = false;
         document.getElementById('filterCompany').disabled = false;
-        document.getElementById('filterProject').value = 'all';
-        document.getElementById('filterCompany').value = 'all';
 
         selectedInfringements.clear();
         updateSelectedCount();
@@ -906,8 +908,14 @@
     }
 
     function applyFilters() {
+        // 优先使用currentProjectId（通过项目点击进入时）
+        var targetProjectId = currentProjectId;
+        if (!targetProjectId) {
+            // 否则使用筛选下拉框的值
+            targetProjectId = document.getElementById('filterProject').value;
+        }
+
         // 获取筛选条件
-        var filterProject = document.getElementById('filterProject').value;
         var filterCompany = document.getElementById('filterCompany').value;
 
         // 获取列筛选条件
@@ -933,9 +941,9 @@
 
         // 收集所有数据
         var allData = [];
-        if (filterProject !== 'all') {
+        if (targetProjectId && targetProjectId !== 'all') {
             // 显示指定项目的数据
-            allData = infringementData[filterProject] || [];
+            allData = infringementData[targetProjectId] || [];
         } else if (filterCompany !== 'all') {
             // 显示指定公司的数据
             Object.keys(infringementData).forEach(projectId => {
@@ -1533,7 +1541,7 @@
 
         filterProject.innerHTML = '<option value="">全部项目</option>';
 
-        if (filterCompany) {
+        if (filterCompany && filterCompany !== 'all') {
             var relatedProjects = projects.filter(p => p.companyName === filterCompany);
             relatedProjects.forEach(function(p) {
                 var option = document.createElement('option');
@@ -1712,12 +1720,13 @@
         selectedInfringements.clear();
         updateSelectedCount();
 
-        // 自动设置筛选器
+        // 自动设置筛选器（用于显示和后续筛选）
         document.getElementById('filterCompany').value = project.companyName;
         updateProjectList();
         document.getElementById('filterProject').value = id;
 
-        renderInfringements(infringementData[id] || []);
+        // 重新应用筛选（会使用currentProjectId）
+        applyFilters();
     }
 
     function renderInfringements(data) {
