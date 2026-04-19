@@ -244,14 +244,16 @@
                 <!-- 第2行：筛选项目 + 筛选公司 -->
                 <div style="margin-bottom:10px;">
                     <span style="font-size:14px; color:#333; font-weight:500;">筛选公司：</span>
-                    <select id="filterCompany" onchange="filterByCompany()" style="padding:5px 10px; border:1px solid #ddd; border-radius:4px; font-size:13px;">
+                    <select id="filterCompany" style="padding:5px 10px; border:1px solid #ddd; border-radius:4px; font-size:13px;">
                         <option value="all">全部公司</option>
                     </select>
 
                     <span style="font-size:14px; color:#333; font-weight:500; margin-left:20px;">筛选项目：</span>
-                    <select id="filterProject" onchange="filterByProject()" style="padding:5px 10px; border:1px solid #ddd; border-radius:4px; font-size:13px;">
+                    <select id="filterProject" style="padding:5px 10px; border:1px solid #ddd; border-radius:4px; font-size:13px;">
                         <option value="all">全部项目</option>
                     </select>
+
+                    <button onclick="applyCompanyProjectFilters()" style="padding:5px 16px; background-color:#28a745; color:white; border:none; border-radius:4px; cursor:pointer; font-size:13px; margin-left:10px;">确认</button>
                 </div>
 
                 <!-- 第3行：操作按钮 + 搜索框 -->
@@ -1758,6 +1760,43 @@
     function resetInfringementSearch() {
         document.getElementById('infringementSearchInput').value = '';
         renderInfringements();
+    }
+
+    function applyCompanyProjectFilters() {
+        var filterCompany = document.getElementById('filterCompany').value;
+        var filterProject = document.getElementById('filterProject').value;
+
+        // 如果选择了具体公司，更新项目选项
+        if (filterCompany !== 'all') {
+            var filterProjectSelect = document.getElementById('filterProject');
+            var selectedProjectId = filterProjectSelect.value;
+            var relatedProjects = projects.filter(p => p.companyName === filterCompany);
+
+            if (relatedProjects.length > 0) {
+                filterProjectSelect.innerHTML = '<option value="all">全部项目</option>';
+                relatedProjects.forEach(function(p) {
+                    var option = document.createElement('option');
+                    option.value = p.id;
+                    option.textContent = p.projectName;
+                    filterProjectSelect.appendChild(option);
+                });
+
+                // 如果当前选中的项目不属于该公司，重置为"全部项目"
+                var currentProjectInList = relatedProjects.find(p => p.id === selectedProjectId);
+                if (!currentProjectInList) {
+                    filterProjectSelect.value = 'all';
+                }
+            } else {
+                filterProjectSelect.innerHTML = '<option value="all">全部项目</option>';
+                filterProjectSelect.value = 'all';
+            }
+        } else {
+            // 选择"全部公司"，显示全部项目
+            updateProjectFilter();
+        }
+
+        // 应用筛选
+        applyFilters();
     }
 
     function deleteProject(id) {
