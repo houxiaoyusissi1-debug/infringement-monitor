@@ -1545,6 +1545,79 @@
         updateCompanyFilter();
     }
 
+    function updateProjectList() {
+        var filterCompany = document.getElementById('filterCompany').value;
+        var filterProject = document.getElementById('filterProject');
+        var selectedProjectId = filterProject.value;
+
+        filterProject.innerHTML = '<option value="">全部项目</option>';
+
+        if (filterCompany) {
+            var relatedProjects = projects.filter(p => p.companyName === filterCompany);
+            relatedProjects.forEach(function(p) {
+                var option = document.createElement('option');
+                option.value = p.id;
+                option.textContent = p.projectName;
+                filterProject.appendChild(option);
+            });
+        } else {
+            projects.forEach(function(p) {
+                var option = document.createElement('option');
+                option.value = p.id;
+                option.textContent = p.projectName;
+                filterProject.appendChild(option);
+            });
+        }
+
+        if (selectedProjectId) {
+            var exists = Array.from(filterProject.options).some(opt => opt.value === selectedProjectId);
+            if (!exists) {
+                filterProject.value = '';
+            } else {
+                filterProject.value = selectedProjectId;
+            }
+        }
+    }
+
+    function confirmProjectFilter() {
+        var filterCompany = document.getElementById('filterCompany').value;
+        var filterProject = document.getElementById('filterProject').value;
+
+        if (filterProject) {
+            currentProjectId = filterProject;
+            var project = projects.find(p => p.id == filterProject);
+            document.getElementById('currentProjectTitle').textContent = project.projectName + ' - 侵权线索列表';
+            renderInfringements(infringementData[filterProject] || []);
+        } else if (filterCompany) {
+            var allData = [];
+            Object.keys(infringementData).forEach(projectId => {
+                var project = projects.find(p => p.id == projectId);
+                if (project && project.companyName === filterCompany) {
+                    allData = allData.concat(infringementData[projectId] || []);
+                }
+            });
+            renderInfringements(allData);
+        } else {
+            renderInfringements(getAllInfringementData());
+        }
+    }
+
+    function resetProjectFilter() {
+        document.getElementById('filterCompany').value = '';
+        document.getElementById('filterProject').value = '';
+        currentProjectId = null;
+        document.getElementById('currentProjectTitle').textContent = '侵权线索列表';
+        renderInfringements(getAllInfringementData());
+    }
+
+    function getAllInfringementData() {
+        var allData = [];
+        Object.keys(infringementData).forEach(projectId => {
+            allData = allData.concat(infringementData[projectId] || []);
+        });
+        return allData;
+    }
+
     function selectProject(id, row) {
         entryMode = 'project';
         currentProjectId = id;
