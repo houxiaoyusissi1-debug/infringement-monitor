@@ -254,6 +254,12 @@
                     </select>
 
                     <button onclick="applyCompanyProjectFilters()" style="padding:5px 16px; background-color:#28a745; color:white; border:none; border-radius:4px; cursor:pointer; font-size:13px; margin-left:10px;">确认</button>
+
+                    <span style="margin-left:20px;"></span>
+
+                    <input type="text" id="infringementSearchInput" placeholder="关键词搜索" style="padding:5px 10px; border:1px solid #ddd; border-radius:4px; font-size:13px; width:200px;">
+                    <button onclick="searchInfringements()" style="padding:5px 16px; background-color:#006633; color:white; border:none; border-radius:4px; cursor:pointer; font-size:13px;">搜索</button>
+                    <button onclick="resetInfringementSearch()" style="padding:5px 16px; background-color:white; color:#666; border:1px solid #ddd; border-radius:4px; cursor:pointer; font-size:13px;">重置</button>
                 </div>
 
                 <!-- 第3行：操作按钮 + 平台选择 + 搜索框 -->
@@ -263,7 +269,7 @@
                     <button class="btn-create" onclick="importScrapedDataManual()" style="background-color:#ffc107;color:#333;">📥 导入抓取数据</button>
                     <button class="btn-export-selected" onclick="exportSelectedInfringements()" id="exportSelectedBtn">📥 导出选中的侵权线索</button>
 
-                    <div id="platformSelector" style="display:flex; gap:15px; align-items:center; background:#f5f5f5; padding:8px 12px; border-radius:6px;">
+                    <div id="platformSelector" style="display:flex; gap:15px; align-items:center; background:#f5f5f5; padding:8px 12px; border-radius:6px; margin-left:20px;">
                         <span style="font-size:14px; color:#333; font-weight:500;">选择平台：</span>
                         <label style="font-size:14px; cursor:pointer;"><input type="checkbox" value="taobao" checked onchange="filterByPlatform()"> 淘宝</label>
                         <label style="font-size:14px; cursor:pointer;"><input type="checkbox" value="pinduoduo" onchange="filterByPlatform()"> 拼多多</label>
@@ -271,12 +277,6 @@
                         <label style="font-size:14px; cursor:pointer;"><input type="checkbox" value="1688" onchange="filterByPlatform()"> 1688</label>
                     </div>
 
-                    <div style="margin-left:auto; display:flex; gap:5px;">
-                        <input type="text" id="infringementSearchInput" placeholder="关键词搜索" style="padding:8px 12px; border:1px solid #ddd; border-radius:4px; width:200px;">
-                        <button onclick="searchInfringements()" style="padding:8px 16px; background-color:#006633; color:white; border:none; border-radius:4px; cursor:pointer;">搜索</button>
-                        <button onclick="resetInfringementSearch()" style="padding:8px 16px; background-color:white; color:#666; border:1px solid #ddd; border-radius:4px; cursor:pointer;">重置</button>
-                    </div>
-                </div>
             </div>
 
             <div class="infringement-table-wrapper">
